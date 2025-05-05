@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ButtonQuiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: black;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent; /* Elimina el resaltado al tocar en móviles */
+        }
+
+        header {
+            text-align: center;
+            padding: 2em 1em;
+            font-size: 6vw;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            touch-action: manipulation; /* Mejora la respuesta táctil */
+        }
+
+        .button {
+            cursor: pointer;
+            background-color: #c0392b;
+            position: relative;
+            border-radius: 50%;
+            width: 80vw;
+            max-width: 300px;
+            height: 16vw;
+            max-height: 80px;
+            transform: translateY(0);
+            box-shadow: 0px 15px 0 20px #352d2d, 0px 40px 0 30px #000000;
+            border: none;
+            outline: none;
+            transition: transform 0.1s;
+            -webkit-user-select: none; /* Evita selección de texto al tocar */
+            user-select: none;
+        }
+
+        .button::before {
+            content: '';
+            z-index: 1;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            position: absolute;
+            bottom: 100%;
+            left: 0%;
+            transition: bottom 0.2s ease-out;
+            width: 100%;
+            height: 100%;
+        }
+
+        .button::after {
+            content: '';
+            background-color: #c0392b;
+            position: absolute;
+            bottom: 50%;
+            left: 0%;
+            width: 100%;
+            height: 100%;
+            transition: height 0.2s ease-out;
+        }
+
+        /* Estados activos */
+        .button.active::before {
+            bottom: 10% !important;
+        }
+
+        .button.active::after {
+            height: 10% !important;
+        }
+
+        /* Para dispositivos que soportan :active */
+        .button:active::before,
+        .button:active::after {
+            transition-duration: 0.1s; /* Transición más rápida al presionar */
+        }
+
+        .button:active::before {
+            bottom: 10%;
+        }
+
+        .button:active::after {
+            height: 10%;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1em;
+            font-size: 1em;
+            background: #111;
+            color: #888;
+            font-style: italic;
+            border-top: 1px solid #222;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                font-size: 7vw;
+            }
+
+            footer {
+                font-size: 0.9em;
+                padding: 0.8em;
+            }
+            
+            .button::before {
+                transition: bottom 0.15s ease-out;
+            }
+            
+            .button::after {
+                transition: height 0.15s ease-out;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        Press the button to answer
+    </header>
+
+    <main>
+        <button class="button" id="playButton"></button>
+        <audio id="audio" src="audio.mp3" preload="auto"></audio>
+    </main>
+
+    <footer>
+        © Ezequiel Balmelli — 2025
+    </footer>
+
+    <script>
+        const playButton = document.getElementById('playButton');
+        const audio = document.getElementById('audio');
+
+        let isPressed = false;
+
+        // Función para reproducir solo una vez
+        const playSoundOnce = () => {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log("Error al reproducir audio:", e));
+        };
+
+        // Manejar el estado presionado
+        const handlePress = () => {
+            if (!isPressed) {
+                isPressed = true;
+                playButton.classList.add('active');
+                playSoundOnce();
+            }
+        };
+
+        const handleRelease = () => {
+            isPressed = false;
+            playButton.classList.remove('active');
+        };
+
+        // Eventos para mouse
+        playButton.addEventListener('mousedown', () => {
+            handlePress();
+        });
+        playButton.addEventListener('mouseup', handleRelease);
+        playButton.addEventListener('mouseleave', handleRelease);
+
+        // Eventos para pantalla táctil
+        playButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handlePress();
+        }, { passive: false });
+
+        playButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleRelease();
+        }, { passive: false });
+
+        playButton.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            handleRelease();
+        }, { passive: false });
+
+        // Prevenir el comportamiento por defecto del touch en el documento
+        document.addEventListener('touchmove', (e) => {
+            if (isPressed) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+
+</body>
+</html>
