@@ -1,9 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Buzzify">
     <style>
         .ring { fill: #2f3336; }
-        @media (prefers-color-scheme: dark) {
-            .ring { fill: #c9cdd1; }
-        }
+        @media (prefers-color-scheme: dark) { .ring { fill: #c9cdd1; } }
     </style>
     <circle class="ring" cx="32" cy="32" r="30"/>
     <circle cx="32" cy="32" r="24" fill="#2ecc71"/>
