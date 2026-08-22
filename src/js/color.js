@@ -1,8 +1,8 @@
 import { onLangChange, t } from './i18n.js';
 
 const STORAGE_KEY = 'buttonColor';
-const DEFAULT_COLOR = '#e84c3d';
-const LEGACY_DEFAULT = '#c0392b';
+const DEFAULT_COLOR = '#2ecc71';
+const STALE_DEFAULTS = ['#c0392b', '#e84c3d'];
 
 const PRESETS = [
     ['red', '#e84c3d'],
@@ -22,7 +22,7 @@ const readStored = () => {
     try {
         stored = localStorage.getItem(STORAGE_KEY);
     } catch {}
-    if (!stored || stored.toLowerCase() === LEGACY_DEFAULT) return DEFAULT_COLOR;
+    if (!stored || STALE_DEFAULTS.includes(stored.toLowerCase())) return DEFAULT_COLOR;
     return stored.toLowerCase();
 };
 

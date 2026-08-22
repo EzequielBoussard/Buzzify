@@ -8,7 +8,7 @@ const SWEEP_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 const root = document.documentElement;
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-let currentTheme = root.dataset.theme === 'light' ? 'light' : 'dark';
+let currentTheme = root.dataset.theme === 'dark' ? 'dark' : 'light';
 
 const sweep = (origin, commit) => {
     if (!document.startViewTransition || prefersReducedMotion()) {
