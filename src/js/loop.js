@@ -1,0 +1,150 @@
+/*
+ * The source is not a stationary tone: its low band climbs for the first ~300 ms
+ * while the high band stays flat. Looping across that ramp restarts the bass
+ * lower than it ended, once per revolution, which is heard as a thump. The loop
+ * is therefore cut from the stretch where the low band has levelled off.
+ */
+
+const BLOCK_MS = 10;
+const SILENCE_RATIO = 0.5;
+const LOW_CUTOFF = 120;
+const PLATEAU_TOLERANCES = [0.12, 0.2, 0.35, 1];
+const MATCH_WINDOW = 4096;
+const COARSE_STEP = 8;
+const MIN_LOOP_MS = 150;
+const CROSSFADE_MS = 20;
+
+const lowPass = (data, sampleRate, cutoff) => {
+    const decay = Math.exp((-2 * Math.PI * cutoff) / sampleRate);
+    const gain = 1 - decay;
+    const out = new Float32Array(data.length);
+
+    let value = 0;
+    for (let i = 0; i < data.length; i += 1) {
+        value = gain * data[i] + decay * value;
+        out[i] = value;
+    }
+
+    value = 0;
+    for (let i = data.length - 1; i >= 0; i -= 1) {
+        value = gain * out[i] + decay * value;
+        out[i] = value;
+    }
+    return out;
+};
+
+const blockLevels = (data, size) => {
+    const levels = [];
+    for (let i = 0; i + size <= data.length; i += size) {
+        let sum = 0;
+        for (let j = i; j < i + size; j += 1) sum += data[j] * data[j];
+        levels.push(Math.sqrt(sum / size));
+    }
+    return levels;
+};
+
+const median = (values) => [...values].sort((a, b) => a - b)[values.length >> 1];
+
+const findLastLoudBlock = (levels) => {
+    const threshold = median(levels) * SILENCE_RATIO;
+    let last = levels.length - 1;
+    while (last > 0 && levels[last] < threshold) last -= 1;
+    return last;
+};
+
+const findPlateauStart = (levels, lastBlock, tolerance) => {
+    const reference = median(levels.slice(Math.floor(levels.length * 0.6), lastBlock));
+    let first = lastBlock;
+    for (let i = lastBlock - 1; i >= 0; i -= 1) {
+        if (Math.abs(levels[i] - reference) / reference > tolerance) break;
+        first = i;
+    }
+    return first;
+};
+
+const correlate = (data, a, b, width, step) => {
+    let product = 0;
+    let energyA = 0;
+    let energyB = 0;
+    for (let i = 0; i < width; i += step) {
+        const x = data[a + i];
+        const y = data[b + i];
+        product += x * y;
+        energyA += x * x;
+        energyB += y * y;
+    }
+    return product / Math.sqrt(energyA * energyB || 1);
+};
+
+const findLoopLength = (data, start, end, minLength) => {
+    const maxLength = end - start - MATCH_WINDOW;
+    let coarse = minLength;
+    let best = -Infinity;
+
+    for (let length = minLength; length <= maxLength; length += COARSE_STEP) {
+        const score = correlate(data, start, start + length, MATCH_WINDOW, COARSE_STEP);
+        if (score > best) {
+            best = score;
+            coarse = length;
+        }
+    }
+
+    let length = coarse;
+    best = -Infinity;
+    for (let offset = -COARSE_STEP * 2; offset <= COARSE_STEP * 2; offset += 1) {
+        const candidate = coarse + offset;
+        if (candidate < minLength || start + candidate + MATCH_WINDOW > end) continue;
+
+        const score = correlate(data, start, start + candidate, MATCH_WINDOW, 1);
+        if (score > best) {
+            best = score;
+            length = candidate;
+        }
+    }
+    return length;
+};
+
+export const buildSeamlessLoop = (context, source) => {
+    const analysis = source.getChannelData(0);
+    const { sampleRate } = source;
+
+    const size = Math.round((sampleRate * BLOCK_MS) / 1000);
+    const lastBlock = findLastLoudBlock(blockLevels(analysis, size));
+    const lowLevels = blockLevels(lowPass(analysis, sampleRate, LOW_CUTOFF), size);
+
+    const end = lastBlock * size;
+    const minLength = Math.round((sampleRate * MIN_LOOP_MS) / 1000);
+
+    let start = -1;
+    for (const tolerance of PLATEAU_TOLERANCES) {
+        const candidate = findPlateauStart(lowLevels, lastBlock, tolerance) * size;
+        if (end - candidate - MATCH_WINDOW >= minLength) {
+            start = candidate;
+            break;
+        }
+    }
+    if (start < 0) return source;
+
+    const length = findLoopLength(analysis, start, end, minLength);
+    const fade = Math.min(
+        Math.round((sampleRate * CROSSFADE_MS) / 1000),
+        Math.floor(length / 8),
+        end - start - length,
+    );
+
+    const loop = context.createBuffer(source.numberOfChannels, length, sampleRate);
+
+    for (let channel = 0; channel < source.numberOfChannels; channel += 1) {
+        const input = source.getChannelData(channel);
+        const output = loop.getChannelData(channel);
+
+        for (let i = 0; i < length; i += 1) output[i] = input[start + i];
+
+        for (let i = 0; i < fade; i += 1) {
+            const ratio = i / fade;
+            output[i] = output[i] * ratio + input[start + length + i] * (1 - ratio);
+        }
+    }
+
+    return loop;
+};
