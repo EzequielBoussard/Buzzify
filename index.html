@@ -1,36 +1,96 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ButtonQuiz</title>
-    <meta name="description" content="Pulsador de concurso: mantené presionado el botón y suena el buzzer.">
+    <title>Buzzify</title>
+    <meta name="description" content="Buzzify — quiz buzzer: hold the button and it sounds.">
     <meta name="theme-color" content="#000000">
+
+    <script>
+        (function () {
+            var root = document.documentElement;
+            try {
+                var lang = localStorage.getItem('lang');
+                if (lang === 'es' || lang === 'en') root.lang = lang;
+
+                var theme = localStorage.getItem('theme');
+                if (theme !== 'dark' && theme !== 'light') {
+                    theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                }
+                root.dataset.theme = theme;
+
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.setAttribute('content', theme === 'light' ? '#f4f4f4' : '#000000');
+
+                var color = localStorage.getItem('buttonColor');
+                if (color && /^#[0-9a-f]{6}$/i.test(color) && color.toLowerCase() !== '#c0392b') {
+                    root.style.setProperty('--color-primary', color);
+                }
+            } catch (error) {
+                root.dataset.theme = 'dark';
+            }
+        })();
+    </script>
 
     <link rel="icon" type="image/png" sizes="96x96" href="assets/icons/favicon-96x96.png">
     <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
     <link rel="shortcut icon" href="assets/icons/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
     <link rel="manifest" href="site.webmanifest">
-
     <link rel="stylesheet" href="src/css/style.css">
+
+    <link rel="modulepreload" href="src/js/main.js">
+    <link rel="modulepreload" href="src/js/buzzer.js">
+    <link rel="modulepreload" href="src/js/color.js">
+    <link rel="modulepreload" href="src/js/i18n.js">
+    <link rel="modulepreload" href="src/js/theme.js">
+    <link rel="modulepreload" href="src/js/audio.js">
+    <link rel="modulepreload" href="src/js/loop.js">
 </head>
 <body>
     <nav class="navbar">
-        <div class="lang-toggle" role="group" aria-label="Idioma">
-            <button type="button" class="lang-btn is-active" data-lang="es" aria-pressed="true">ES</button>
-            <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+        <div class="lang-toggle" role="group" aria-label="Language">
+            <button type="button" class="lang-btn" data-lang="es" aria-pressed="false">ES</button>
+            <button type="button" class="lang-btn" data-lang="en" aria-pressed="true">EN</button>
         </div>
 
-        <button type="button" id="themeToggle" class="icon-btn" aria-label="Cambiar a tema claro"></button>
+        <button type="button" id="themeToggle" class="icon-btn" aria-label="Switch to light theme">
+            <svg class="icon icon--sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="icon icon--moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
 
-        <input type="color" id="colorPicker" value="#c0392b" aria-label="Color del botón">
+        <div class="color-control">
+            <button type="button" id="colorTrigger" class="color-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="colorPanel">
+                <span class="color-trigger__dot" aria-hidden="true"></span>
+                <span class="color-trigger__label"><span data-t="en">Button colour</span><span data-t="es">Color del botón</span></span>
+            </button>
+
+            <div class="color-panel" id="colorPanel" role="dialog" aria-labelledby="colorPanelTitle" hidden>
+                <p class="color-panel__title" id="colorPanelTitle"><span data-t="en">Button colour</span><span data-t="es">Color del botón</span></p>
+                <div class="color-presets" id="colorPresets" role="radiogroup" aria-labelledby="colorPanelTitle"></div>
+                <label class="color-custom">
+                    <span><span data-t="en">Custom</span><span data-t="es">Personalizado</span></span>
+                    <input type="color" id="colorPicker" value="#e84c3d">
+                </label>
+            </div>
+        </div>
     </nav>
 
-    <header id="siteHeader">Presioná el botón para responder</header>
+    <header>
+        <span data-t="en">Press the button to answer</span>
+        <span data-t="es">Presioná el botón para responder</span>
+    </header>
+
+    <noscript>
+        <p class="noscript-note">
+            <span data-t="en">The buzzer needs JavaScript to make a sound.</span>
+            <span data-t="es">El buzzer necesita JavaScript para sonar.</span>
+        </p>
+    </noscript>
 
     <main class="stage">
-        <button type="button" class="buzzer" id="buzzer" aria-label="Responder"></button>
+        <button type="button" class="buzzer" id="buzzer" aria-label="Buzz in"></button>
     </main>
 
     <footer>
