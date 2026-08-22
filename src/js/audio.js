@@ -17,6 +17,7 @@ const sourceBytes = fetch(SOURCE_URL).then((response) => {
 sourceBytes.catch(() => {});
 
 let context = null;
+let unlocked = false;
 let decoding = null;
 let ready = null;
 let active = null;
@@ -28,6 +29,15 @@ const getContext = () => {
     if (!Context) return null;
     context ??= new Context();
     return context;
+};
+
+const unlock = (ctx) => {
+    if (unlocked) return;
+    unlocked = true;
+    const primer = ctx.createBufferSource();
+    primer.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    primer.connect(ctx.destination);
+    primer.start();
 };
 
 const decode = (ctx) => {
@@ -78,7 +88,9 @@ const play = (ctx, buffer) => {
 
 export const primeBuzzer = () => {
     const ctx = getContext();
-    if (ctx) decode(ctx).catch(() => {});
+    if (!ctx) return;
+    unlock(ctx);
+    decode(ctx).catch(() => {});
 };
 
 export const startBuzzer = () => {
@@ -90,6 +102,7 @@ export const startBuzzer = () => {
         return;
     }
 
+    unlock(ctx);
     if (ctx.state === 'suspended') ctx.resume().catch(() => {});
 
     if (ready) {

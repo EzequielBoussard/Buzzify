@@ -1,16 +1,9 @@
-/*
- * The source is not a stationary tone: its low band climbs for the first ~300 ms
- * while the high band stays flat. Looping across that ramp restarts the bass
- * lower than it ended, once per revolution, which is heard as a thump. The loop
- * is therefore cut from the stretch where the low band has levelled off.
- */
-
 const BLOCK_MS = 10;
 const SILENCE_RATIO = 0.5;
 const LOW_CUTOFF = 120;
 const PLATEAU_TOLERANCES = [0.12, 0.2, 0.35, 1];
-const MATCH_WINDOW = 4096;
-const COARSE_STEP = 8;
+const MATCH_WINDOW_MS = 90;
+const COARSE_BANDWIDTH = 5512.5;
 const MIN_LOOP_MS = 150;
 const CROSSFADE_MS = 20;
 
@@ -76,28 +69,32 @@ const correlate = (data, a, b, width, step) => {
     return product / Math.sqrt(energyA * energyB || 1);
 };
 
-const findLoopLength = (data, start, end, minLength) => {
-    const maxLength = end - start - MATCH_WINDOW;
+const findLoopLength = (full, low, start, end, minLength, window, step) => {
+    const maxLength = end - start - window;
+    const score = (length, stride) =>
+        correlate(full, start, start + length, window, stride)
+        + correlate(low, start, start + length, window, stride);
+
     let coarse = minLength;
     let best = -Infinity;
 
-    for (let length = minLength; length <= maxLength; length += COARSE_STEP) {
-        const score = correlate(data, start, start + length, MATCH_WINDOW, COARSE_STEP);
-        if (score > best) {
-            best = score;
+    for (let length = minLength; length <= maxLength; length += step) {
+        const value = score(length, step);
+        if (value > best) {
+            best = value;
             coarse = length;
         }
     }
 
     let length = coarse;
     best = -Infinity;
-    for (let offset = -COARSE_STEP * 2; offset <= COARSE_STEP * 2; offset += 1) {
+    for (let offset = -step * 2; offset <= step * 2; offset += 1) {
         const candidate = coarse + offset;
-        if (candidate < minLength || start + candidate + MATCH_WINDOW > end) continue;
+        if (candidate < minLength || start + candidate + window > end) continue;
 
-        const score = correlate(data, start, start + candidate, MATCH_WINDOW, 1);
-        if (score > best) {
-            best = score;
+        const value = score(candidate, 1);
+        if (value > best) {
+            best = value;
             length = candidate;
         }
     }
@@ -110,22 +107,25 @@ export const buildSeamlessLoop = (context, source) => {
 
     const size = Math.round((sampleRate * BLOCK_MS) / 1000);
     const lastBlock = findLastLoudBlock(blockLevels(analysis, size));
-    const lowLevels = blockLevels(lowPass(analysis, sampleRate, LOW_CUTOFF), size);
+    const low = lowPass(analysis, sampleRate, LOW_CUTOFF);
+    const lowLevels = blockLevels(low, size);
 
     const end = lastBlock * size;
     const minLength = Math.round((sampleRate * MIN_LOOP_MS) / 1000);
+    const window = Math.round((sampleRate * MATCH_WINDOW_MS) / 1000);
+    const step = Math.max(1, Math.round(sampleRate / COARSE_BANDWIDTH));
 
     let start = -1;
     for (const tolerance of PLATEAU_TOLERANCES) {
         const candidate = findPlateauStart(lowLevels, lastBlock, tolerance) * size;
-        if (end - candidate - MATCH_WINDOW >= minLength) {
+        if (end - candidate - window >= minLength) {
             start = candidate;
             break;
         }
     }
     if (start < 0) return source;
 
-    const length = findLoopLength(analysis, start, end, minLength);
+    const length = findLoopLength(analysis, low, start, end, minLength, window, step);
     const fade = Math.min(
         Math.round((sampleRate * CROSSFADE_MS) / 1000),
         Math.floor(length / 8),

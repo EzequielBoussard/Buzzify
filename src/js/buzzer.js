@@ -40,5 +40,5 @@ export const initBuzzer = (button) => {
     button.addEventListener('blur', release);
     window.addEventListener('blur', release);
 
-    window.addEventListener('pointerdown', primeBuzzer, { once: true });
+    window.addEventListener('pointerdown', primeBuzzer, { capture: true, once: true });
 };
