@@ -25,7 +25,11 @@ initColorPicker({
     trigger: document.getElementById('colorTrigger'),
     panel: document.getElementById('colorPanel'),
     presets: document.getElementById('colorPresets'),
-    input: document.getElementById('colorPicker'),
+    custom: document.querySelector('.color-custom'),
+    hue: document.getElementById('hueRange'),
+    saturation: document.getElementById('satRange'),
+    lightness: document.getElementById('litRange'),
+    value: document.getElementById('colorValue'),
 });
 
 initBuzzer(buzzer);

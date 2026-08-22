@@ -1,7 +1,7 @@
 import { onLangChange, t } from './i18n.js';
 
 const STORAGE_KEY = 'theme';
-const META_COLORS = { dark: '#000000', light: '#f4f4f4' };
+const META_COLORS = { dark: '#14161a', light: '#f4f4f4' };
 const SWEEP_DURATION = 550;
 const SWEEP_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 

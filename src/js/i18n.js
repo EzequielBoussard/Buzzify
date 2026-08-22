@@ -7,6 +7,9 @@ const strings = {
         lang: 'Idioma',
         themeLight: 'Cambiar a tema claro',
         themeDark: 'Cambiar a tema oscuro',
+        hue: 'Tono',
+        saturation: 'Saturación',
+        lightness: 'Luminosidad',
         colors: {
             red: 'Rojo',
             orange: 'Naranja',
@@ -23,6 +26,9 @@ const strings = {
         lang: 'Language',
         themeLight: 'Switch to light theme',
         themeDark: 'Switch to dark theme',
+        hue: 'Hue',
+        saturation: 'Saturation',
+        lightness: 'Lightness',
         colors: {
             red: 'Red',
             orange: 'Orange',

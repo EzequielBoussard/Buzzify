@@ -3,12 +3,12 @@
 
     --color-primary: #2ecc71;
     --color-primary-light: #62d994;
-    --color-base: #333;
-    --color-bg: #000;
-    --color-fg: #fff;
-    --color-surface: #111;
-    --color-muted: #888;
-    --color-border: #222;
+    --color-base: #414754;
+    --color-bg: #14161a;
+    --color-fg: #f2f4f7;
+    --color-surface: #1d2027;
+    --color-muted: #9aa1ac;
+    --color-border: #2b2f38;
 
     --buzzer-rim-offset: 15px;
     --buzzer-rim-spread: 20px;
@@ -70,9 +70,21 @@ html[lang='es'] [data-t='es'] {
     display: inline;
 }
 
+.content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(1rem, 4vh, 2.5rem);
+    padding: 1rem;
+}
+
 header {
+    width: 100%;
+    margin: 0;
     text-align: center;
-    padding: 2em 1em;
     font-size: clamp(1.25rem, 6vw, 2.75rem);
 }
 
@@ -87,11 +99,11 @@ header {
 }
 
 .stage {
-    flex: 1;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem 1rem calc(var(--buzzer-clearance) + 1rem);
+    padding-bottom: var(--buzzer-clearance);
 }
 
 .navbar {
@@ -194,7 +206,7 @@ html[lang='en'] .lang-btn[data-lang='en'] {
     z-index: 3;
     display: grid;
     gap: 0.75em;
-    min-width: 12.5em;
+    min-width: 13.5em;
     padding: 0.85em;
     background: var(--color-bg);
     border: 1px solid var(--color-border);
@@ -243,42 +255,93 @@ html[lang='en'] .lang-btn[data-lang='en'] {
 }
 
 .color-custom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75em;
-    font-size: 0.75em;
-    color: var(--color-muted);
-    cursor: pointer;
+    --hue: 145;
+    --sat: 63%;
+    --lit: 49%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4em;
 }
 
-input[type='color'] {
+.color-custom__title {
+    font-size: 0.7em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+}
+
+.color-custom__value {
+    font-size: 0.7em;
+    text-align: right;
+    color: var(--color-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.color-range {
     appearance: none;
     -webkit-appearance: none;
-    width: 28px;
+    width: 100%;
     height: 28px;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
+    margin: 0;
     padding: 0;
-    cursor: pointer;
     background: none;
+    cursor: pointer;
 }
 
-input[type='color']::-webkit-color-swatch-wrapper {
-    padding: 0;
+.color-range::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--track);
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2);
 }
 
-input[type='color']::-webkit-color-swatch,
-input[type='color']::-moz-color-swatch {
-    border: none;
-    border-radius: 3px;
+.color-range::-moz-range-track {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--track);
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2);
+}
+
+.color-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgb(0 0 0 / 0.35);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+.color-range::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border: 1px solid rgb(0 0 0 / 0.35);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+.color-range--hue {
+    --track: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+}
+
+.color-range--sat {
+    --track: linear-gradient(to right,
+        hsl(calc(var(--hue) * 1deg) 0% var(--lit)),
+        hsl(calc(var(--hue) * 1deg) 100% var(--lit)));
+}
+
+.color-range--lit {
+    --track: linear-gradient(to right, #000,
+        hsl(calc(var(--hue) * 1deg) var(--sat) 50%), #fff);
 }
 
 .lang-btn:focus-visible,
 .icon-btn:focus-visible,
 .color-trigger:focus-visible,
 .color-swatch:focus-visible,
-input[type='color']:focus-visible {
+.color-range:focus-visible {
     outline: 2px solid var(--color-primary-light);
     outline-offset: 2px;
 }
@@ -398,6 +461,10 @@ footer a:focus-visible {
     .color-swatch {
         min-width: 2.5rem;
     }
+
+    .color-range {
+        height: 2.5rem;
+    }
 }
 
 @media (max-width: 600px) {
@@ -433,14 +500,13 @@ footer a:focus-visible {
 }
 
 @media (orientation: landscape) and (max-height: 480px) {
-    header {
-        padding: 0.6em 1em;
-        font-size: clamp(1rem, 4.5vh, 1.75rem);
+    .content {
+        gap: 0.75rem;
+        padding: 0.5rem;
     }
 
-    .stage {
-        padding-top: 0.5rem;
-        padding-bottom: calc(var(--buzzer-clearance) + 0.5rem);
+    header {
+        font-size: clamp(1rem, 4.5vh, 1.75rem);
     }
 
     footer {

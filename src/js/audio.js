@@ -9,8 +9,16 @@ const SOURCE_URL = document.createElement('audio').canPlayType('audio/ogg; codec
     ? OGG_URL
     : AAC_URL;
 
+const sourceBytes = fetch(SOURCE_URL).then((response) => {
+    if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
+    return response.arrayBuffer();
+});
+
+sourceBytes.catch(() => {});
+
 let context = null;
-let bufferPromise = null;
+let decoding = null;
+let ready = null;
 let active = null;
 let fallback = null;
 let playToken = 0;
@@ -22,15 +30,14 @@ const getContext = () => {
     return context;
 };
 
-const loadBuffer = (ctx) => {
-    bufferPromise ??= fetch(SOURCE_URL)
-        .then((response) => {
-            if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
-            return response.arrayBuffer();
-        })
-        .then((data) => ctx.decodeAudioData(data))
-        .then((decoded) => buildSeamlessLoop(ctx, decoded));
-    return bufferPromise;
+const decode = (ctx) => {
+    decoding ??= sourceBytes
+        .then((data) => ctx.decodeAudioData(data.slice(0)))
+        .then((buffer) => {
+            ready = buildSeamlessLoop(ctx, buffer);
+            return ready;
+        });
+    return decoding;
 };
 
 const getFallback = () => {
@@ -42,6 +49,8 @@ const getFallback = () => {
     return fallback;
 };
 
+const playFallback = () => getFallback().play().catch(() => {});
+
 const teardown = ({ source, gain }) => {
     const stopAt = context.currentTime + RELEASE_FADE;
     gain.gain.setValueAtTime(gain.gain.value, context.currentTime);
@@ -49,43 +58,52 @@ const teardown = ({ source, gain }) => {
     source.stop(stopAt);
 };
 
-export const primeBuzzer = () => {
-    const ctx = getContext();
-    if (ctx) loadBuffer(ctx).catch(() => {});
+const play = (ctx, buffer) => {
+    if (active) teardown(active);
+
+    const gain = ctx.createGain();
+    gain.gain.value = OUTPUT_GAIN;
+    gain.connect(ctx.destination);
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    source.loopStart = 0;
+    source.loopEnd = buffer.duration;
+    source.connect(gain);
+    source.start();
+
+    active = { source, gain };
 };
 
-export const startBuzzer = async () => {
+export const primeBuzzer = () => {
+    const ctx = getContext();
+    if (ctx) decode(ctx).catch(() => {});
+};
+
+export const startBuzzer = () => {
     const token = ++playToken;
     const ctx = getContext();
 
     if (!ctx) {
-        getFallback().play().catch(() => {});
+        playFallback();
         return;
     }
 
-    try {
-        if (ctx.state === 'suspended') await ctx.resume();
-        const buffer = await loadBuffer(ctx);
-        if (token !== playToken) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
 
-        if (active) teardown(active);
-
-        const gain = ctx.createGain();
-        gain.gain.value = OUTPUT_GAIN;
-        gain.connect(ctx.destination);
-
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = true;
-        source.loopStart = 0;
-        source.loopEnd = buffer.duration;
-        source.connect(gain);
-        source.start();
-
-        active = { source, gain };
-    } catch {
-        if (token === playToken) getFallback().play().catch(() => {});
+    if (ready) {
+        play(ctx, ready);
+        return;
     }
+
+    decode(ctx)
+        .then((buffer) => {
+            if (token === playToken) play(ctx, buffer);
+        })
+        .catch(() => {
+            if (token === playToken) playFallback();
+        });
 };
 
 export const stopBuzzer = () => {

@@ -19,7 +19,7 @@
                 root.dataset.theme = theme;
 
                 var meta = document.querySelector('meta[name="theme-color"]');
-                if (meta) meta.setAttribute('content', theme === 'light' ? '#f4f4f4' : '#000000');
+                if (meta) meta.setAttribute('content', theme === 'light' ? '#f4f4f4' : '#14161a');
 
                 var color = localStorage.getItem('buttonColor');
                 var stale = ['#c0392b', '#e84c3d'];
@@ -68,29 +68,34 @@
             <div class="color-panel" id="colorPanel" role="dialog" aria-labelledby="colorPanelTitle" hidden>
                 <p class="color-panel__title" id="colorPanelTitle"><span data-t="en">Button colour</span><span data-t="es">Color del botón</span></p>
                 <div class="color-presets" id="colorPresets" role="radiogroup" aria-labelledby="colorPanelTitle"></div>
-                <label class="color-custom">
-                    <span><span data-t="en">Custom</span><span data-t="es">Personalizado</span></span>
-                    <input type="color" id="colorPicker" value="#2ecc71">
-                </label>
+                <div class="color-custom">
+                    <span class="color-custom__title"><span data-t="en">Custom</span><span data-t="es">Personalizado</span></span>
+                    <input type="range" class="color-range color-range--hue" id="hueRange" min="0" max="360" step="1">
+                    <input type="range" class="color-range color-range--sat" id="satRange" min="0" max="100" step="1">
+                    <input type="range" class="color-range color-range--lit" id="litRange" min="15" max="85" step="1">
+                    <output class="color-custom__value" id="colorValue"></output>
+                </div>
             </div>
         </div>
     </nav>
 
-    <header>
-        <span data-t="en">Press the button to answer</span>
-        <span data-t="es">Presioná el botón para responder</span>
-    </header>
+    <div class="content">
+        <header>
+            <span data-t="en">Press the button to answer</span>
+            <span data-t="es">Presioná el botón para responder</span>
+        </header>
 
-    <noscript>
-        <p class="noscript-note">
-            <span data-t="en">The buzzer needs JavaScript to make a sound.</span>
-            <span data-t="es">El buzzer necesita JavaScript para sonar.</span>
-        </p>
-    </noscript>
+        <noscript>
+            <p class="noscript-note">
+                <span data-t="en">The buzzer needs JavaScript to make a sound.</span>
+                <span data-t="es">El buzzer necesita JavaScript para sonar.</span>
+            </p>
+        </noscript>
 
-    <main class="stage">
-        <button type="button" class="buzzer" id="buzzer" aria-label="Buzz in"></button>
-    </main>
+        <main class="stage">
+            <button type="button" class="buzzer" id="buzzer" aria-label="Buzz in"></button>
+        </main>
+    </div>
 
     <footer>
         © <a href="https://ezequiel.is-a.dev" target="_blank" rel="noopener noreferrer">Ezequiel Boussard</a> — 2025
