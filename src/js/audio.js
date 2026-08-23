@@ -9,19 +9,10 @@ const SOURCE_URL = document.createElement('audio').canPlayType('audio/ogg; codec
     ? OGG_URL
     : AAC_URL;
 
-const sourceBytes = fetch(SOURCE_URL).then((response) => {
-    if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
-    return response.arrayBuffer();
-});
-
-sourceBytes.catch(() => {});
-
 let context = null;
-let unlocked = false;
-let decoding = null;
+let loading = null;
 let ready = null;
 let active = null;
-let fallback = null;
 let playToken = 0;
 
 const getContext = () => {
@@ -31,35 +22,34 @@ const getContext = () => {
     return context;
 };
 
-const unlock = (ctx) => {
-    if (unlocked) return;
-    unlocked = true;
-    const primer = ctx.createBufferSource();
-    primer.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
-    primer.connect(ctx.destination);
-    primer.start();
-};
+const load = () => {
+    const ctx = getContext();
+    if (!ctx) return Promise.reject(new Error('Web Audio unavailable'));
 
-const decode = (ctx) => {
-    decoding ??= sourceBytes
-        .then((data) => ctx.decodeAudioData(data.slice(0)))
+    loading ??= fetch(SOURCE_URL)
+        .then((response) => {
+            if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
+            return response.arrayBuffer();
+        })
+        .then((data) => ctx.decodeAudioData(data))
         .then((buffer) => {
             ready = buildSeamlessLoop(ctx, buffer);
             return ready;
         });
-    return decoding;
+
+    return loading;
 };
 
-const getFallback = () => {
-    if (!fallback) {
-        fallback = new Audio(SOURCE_URL);
-        fallback.loop = true;
-        fallback.preload = 'auto';
-    }
-    return fallback;
-};
+const wake = (ctx) => {
+    if (ctx.state === 'running') return;
 
-const playFallback = () => getFallback().play().catch(() => {});
+    const primer = ctx.createBufferSource();
+    primer.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    primer.connect(ctx.destination);
+    primer.start();
+
+    ctx.resume().catch(() => {});
+};
 
 const teardown = ({ source, gain }) => {
     const stopAt = context.currentTime + RELEASE_FADE;
@@ -86,37 +76,23 @@ const play = (ctx, buffer) => {
     active = { source, gain };
 };
 
-export const primeBuzzer = () => {
-    const ctx = getContext();
-    if (!ctx) return;
-    unlock(ctx);
-    decode(ctx).catch(() => {});
-};
-
 export const startBuzzer = () => {
     const token = ++playToken;
     const ctx = getContext();
+    if (!ctx) return;
 
-    if (!ctx) {
-        playFallback();
-        return;
-    }
-
-    unlock(ctx);
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    wake(ctx);
 
     if (ready) {
         play(ctx, ready);
         return;
     }
 
-    decode(ctx)
+    load()
         .then((buffer) => {
             if (token === playToken) play(ctx, buffer);
         })
-        .catch(() => {
-            if (token === playToken) playFallback();
-        });
+        .catch(() => {});
 };
 
 export const stopBuzzer = () => {
@@ -126,9 +102,6 @@ export const stopBuzzer = () => {
         teardown(active);
         active = null;
     }
-
-    if (fallback) {
-        fallback.pause();
-        fallback.currentTime = 0;
-    }
 };
+
+load().catch(() => {});

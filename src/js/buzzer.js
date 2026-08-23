@@ -1,4 +1,4 @@
-import { primeBuzzer, startBuzzer, stopBuzzer } from './audio.js';
+import { startBuzzer, stopBuzzer } from './audio.js';
 
 const HOLD_KEYS = new Set([' ', 'Enter']);
 
@@ -39,6 +39,4 @@ export const initBuzzer = (button) => {
 
     button.addEventListener('blur', release);
     window.addEventListener('blur', release);
-
-    window.addEventListener('pointerdown', primeBuzzer, { capture: true, once: true });
 };
