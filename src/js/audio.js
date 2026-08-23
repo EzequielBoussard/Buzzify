@@ -4,39 +4,43 @@ const OGG_URL = new URL('../../assets/audio/audio.ogg', import.meta.url);
 const AAC_URL = new URL('../../assets/audio/audio.m4a', import.meta.url);
 const RELEASE_FADE = 0.02;
 const OUTPUT_GAIN = 4;
+const ARMING_EVENTS = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'];
 
 const SOURCE_URL = document.createElement('audio').canPlayType('audio/ogg; codecs="vorbis"')
     ? OGG_URL
     : AAC_URL;
 
+const sourceBytes = fetch(SOURCE_URL).then((response) => {
+    if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
+    return response.arrayBuffer();
+});
+
+sourceBytes.catch(() => {});
+
 let context = null;
 let loading = null;
 let ready = null;
 let active = null;
-let playToken = 0;
+let wanted = false;
 
 const getContext = () => {
+    if (context) return context;
+
     const Context = window.AudioContext || window.webkitAudioContext;
     if (!Context) return null;
-    context ??= new Context();
+
+    context = new Context();
+    context.addEventListener('statechange', () => tryPlay());
     return context;
 };
 
-const load = () => {
-    const ctx = getContext();
-    if (!ctx) return Promise.reject(new Error('Web Audio unavailable'));
-
-    loading ??= fetch(SOURCE_URL)
-        .then((response) => {
-            if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
-            return response.arrayBuffer();
-        })
-        .then((data) => ctx.decodeAudioData(data))
+const load = (ctx) => {
+    loading ??= sourceBytes
+        .then((data) => ctx.decodeAudioData(data.slice(0)))
         .then((buffer) => {
             ready = buildSeamlessLoop(ctx, buffer);
             return ready;
         });
-
     return loading;
 };
 
@@ -58,50 +62,57 @@ const teardown = ({ source, gain }) => {
     source.stop(stopAt);
 };
 
-const play = (ctx, buffer) => {
-    if (active) teardown(active);
+function tryPlay() {
+    const ctx = context;
+    if (!wanted || active || !ctx || ctx.state !== 'running') return;
+
+    if (!ready) {
+        load(ctx).then(tryPlay).catch(() => {});
+        return;
+    }
 
     const gain = ctx.createGain();
     gain.gain.value = OUTPUT_GAIN;
     gain.connect(ctx.destination);
 
     const source = ctx.createBufferSource();
-    source.buffer = buffer;
+    source.buffer = ready;
     source.loop = true;
     source.loopStart = 0;
-    source.loopEnd = buffer.duration;
+    source.loopEnd = ready.duration;
     source.connect(gain);
     source.start();
 
     active = { source, gain };
-};
+}
 
-export const startBuzzer = () => {
-    const token = ++playToken;
+const arm = () => {
+    ARMING_EVENTS.forEach((type) => window.removeEventListener(type, arm, true));
+
     const ctx = getContext();
     if (!ctx) return;
 
     wake(ctx);
+    load(ctx).catch(() => {});
+};
 
-    if (ready) {
-        play(ctx, ready);
-        return;
-    }
+ARMING_EVENTS.forEach((type) => window.addEventListener(type, arm, true));
 
-    load()
-        .then((buffer) => {
-            if (token === playToken) play(ctx, buffer);
-        })
-        .catch(() => {});
+export const startBuzzer = () => {
+    wanted = true;
+
+    const ctx = getContext();
+    if (!ctx) return;
+
+    wake(ctx);
+    tryPlay();
 };
 
 export const stopBuzzer = () => {
-    playToken += 1;
+    wanted = false;
 
     if (active) {
         teardown(active);
         active = null;
     }
 };
-
-load().catch(() => {});
