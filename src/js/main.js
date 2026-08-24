@@ -1,5 +1,6 @@
 import { initBuzzer } from './buzzer.js';
 import { initColorPicker } from './color.js';
+import { initIntro } from './intro.js';
 import { onLangChange, setLang, t } from './i18n.js';
 import { initTheme } from './theme.js';
 
@@ -33,3 +34,4 @@ initColorPicker({
 });
 
 initBuzzer(buzzer);
+initIntro(document.getElementById('intro'));

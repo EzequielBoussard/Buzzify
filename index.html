@@ -38,9 +38,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
     <link rel="manifest" href="site.webmanifest">
     <link rel="stylesheet" href="src/css/style.css">
+    <noscript><style>.intro { display: none; }</style></noscript>
 
     <link rel="modulepreload" href="src/js/main.js">
     <link rel="modulepreload" href="src/js/buzzer.js">
+    <link rel="modulepreload" href="src/js/intro.js">
     <link rel="modulepreload" href="src/js/color.js">
     <link rel="modulepreload" href="src/js/i18n.js">
     <link rel="modulepreload" href="src/js/theme.js">
@@ -48,6 +50,17 @@
     <link rel="modulepreload" href="src/js/loop.js">
 </head>
 <body>
+    <div class="intro" id="intro">
+        <p class="intro__title">
+            <span data-t="en">Hold the button down to buzz</span>
+            <span data-t="es">Mantené presionado el botón para responder</span>
+        </p>
+        <p class="intro__hint">
+            <span data-t="en">Tap anywhere to start</span>
+            <span data-t="es">Tocá para empezar</span>
+        </p>
+    </div>
+
     <nav class="navbar">
         <div class="lang-toggle" role="group" aria-label="Language">
             <button type="button" class="lang-btn" data-lang="es" aria-pressed="false">ES</button>

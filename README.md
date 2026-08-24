@@ -12,6 +12,7 @@ Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos.
 - **Español e inglés.**
 - **Funciona con teclado**: `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada.
 - Las preferencias se guardan en `localStorage` y se aplican antes del primer pintado, sin parpadeo.
+- **Capa de entrada** que explica el gesto y se disipa con el primer toque. No es decorativa: las políticas de autoplay solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
 
 Por defecto arranca en inglés, tema claro y verde `#2ecc71`.
 
@@ -38,6 +39,7 @@ src/js/main.js             cablea los módulos con el DOM
 src/js/buzzer.js           puntero y teclado sobre el botón
 src/js/audio.js            reproducción con Web Audio
 src/js/loop.js             construye el bucle sin costura
+src/js/intro.js            capa de entrada que habilita el audio
 src/js/theme.js            claro/oscuro y la transición circular
 src/js/color.js            presets y selector HSL
 src/js/i18n.js             textos de accesibilidad y cambio de idioma
