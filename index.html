@@ -12,7 +12,10 @@
             var root = document.documentElement;
             try {
                 var lang = localStorage.getItem('lang');
-                if (lang === 'es' || lang === 'en') root.lang = lang;
+                if (lang !== 'es' && lang !== 'en') {
+                    lang = (navigator.language || '').toLowerCase().indexOf('es') === 0 ? 'es' : 'en';
+                }
+                root.lang = lang;
 
                 var theme = localStorage.getItem('theme');
                 if (theme !== 'dark' && theme !== 'light') theme = 'light';
@@ -51,14 +54,29 @@
 </head>
 <body>
     <div class="intro" id="intro">
-        <p class="intro__title">
-            <span data-t="en">Hold the button down to buzz</span>
-            <span data-t="es">Mantené presionado el botón para responder</span>
-        </p>
-        <p class="intro__hint">
-            <span data-t="en">Tap anywhere to start</span>
-            <span data-t="es">Tocá para empezar</span>
-        </p>
+        <div class="intro__panel">
+            <svg class="intro__mark" viewBox="0 0 64 64" aria-hidden="true">
+                <circle class="intro__mark-ring" cx="32" cy="32" r="30"/>
+                <circle class="intro__mark-cap" cx="32" cy="32" r="24"/>
+            </svg>
+
+            <p class="intro__brand">Buzzify</p>
+
+            <p class="intro__title">
+                <span data-t="en">Hold the button down to buzz</span>
+                <span data-t="es">Mantené presionado el botón para responder</span>
+            </p>
+
+            <div class="intro__langs lang-toggle" role="group" aria-label="Language">
+                <button type="button" class="lang-btn" data-lang="es">ES</button>
+                <button type="button" class="lang-btn" data-lang="en">EN</button>
+            </div>
+
+            <p class="intro__hint">
+                <span data-t="en">Tap anywhere to start</span>
+                <span data-t="es">Tocá para empezar</span>
+            </p>
+        </div>
     </div>
 
     <nav class="navbar">

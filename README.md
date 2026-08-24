@@ -9,12 +9,12 @@ Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos.
 - **Sonido continuo mientras se mantiene presionado.** El audio se repite en bucle sin costura audible (ver [El bucle](#el-bucle)).
 - **Tema claro y oscuro**, con una transición circular que se expande desde el propio botón de tema.
 - **Color del botón configurable**: ocho presets y un selector propio de tono, saturación y luminosidad.
-- **Español e inglés.**
+- **Español e inglés.** En la primera visita se elige según `navigator.language`; a partir de ahí manda lo que el visitante haya elegido.
 - **Funciona con teclado**: `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada.
 - Las preferencias se guardan en `localStorage` y se aplican antes del primer pintado, sin parpadeo.
-- **Capa de entrada** que explica el gesto y se disipa con el primer toque. No es decorativa: las políticas de autoplay solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
+- **Capa de entrada** con la marca, el gesto y un conmutador de idioma, que se disipa con el primer toque. No es decorativa: las políticas de autoplay solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
 
-Por defecto arranca en inglés, tema claro y verde `#2ecc71`.
+Por defecto arranca en tema claro y verde `#2ecc71`. El idioma sale de `navigator.language`, con inglés como reserva.
 
 ## Uso local
 
