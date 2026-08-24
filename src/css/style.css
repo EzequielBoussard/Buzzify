@@ -11,6 +11,8 @@
     --color-muted: #9aa1ac;
     --color-border: #2b2f38;
 
+    --vh: 1vh;
+
     --buzzer-rim-offset: 15px;
     --buzzer-rim-spread: 20px;
     --buzzer-base-offset: 40px;
@@ -20,7 +22,7 @@
     --buzzer-height: min(
         calc((90vw - var(--buzzer-base-spread) * 2) / var(--buzzer-ratio)),
         80px,
-        18vh
+        calc(18 * var(--vh))
     );
     --buzzer-width: calc(var(--buzzer-height) * var(--buzzer-ratio));
 
@@ -29,6 +31,12 @@
 
     --recolour: 0.4s ease;
     --retheme: 0.4s ease;
+}
+
+@supports (height: 1svh) {
+    :root {
+        --vh: 1svh;
+    }
 }
 
 @supports (color: color-mix(in srgb, red, white)) {
@@ -61,7 +69,7 @@ html {
 
 body {
     min-height: 100vh;
-    min-height: 100dvh;
+    min-height: 100svh;
     margin: 0;
     display: flex;
     flex-direction: column;
@@ -89,7 +97,7 @@ html[lang='es'] [data-t='es'] {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(1rem, 4vh, 2.5rem);
+    gap: clamp(1rem, calc(4 * var(--vh)), 2.5rem);
     padding: 1rem;
 }
 
@@ -616,7 +624,7 @@ footer a:focus-visible {
     }
 
     header {
-        font-size: clamp(1rem, 4.5vh, 1.75rem);
+        font-size: clamp(1rem, calc(4.5 * var(--vh)), 1.75rem);
     }
 
     footer {
