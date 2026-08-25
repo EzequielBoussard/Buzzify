@@ -39,7 +39,7 @@
     --buzzer-clearance: calc(var(--buzzer-base-offset) + var(--buzzer-base-spread));
 
     --recolour: 0.4s ease;
-    --retheme: 0.4s ease;
+    --retheme: 0.3s ease;
 }
 
 @supports (height: 1svh) {

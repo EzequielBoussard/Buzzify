@@ -2,13 +2,14 @@ import { onLangChange, t } from './i18n.js';
 
 const STORAGE_KEY = 'theme';
 const META_COLORS = { dark: '#14161a', light: '#f4f4f4' };
-const SWEEP_DURATION = 550;
+const SWEEP_DURATION = 380;
 const SWEEP_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
 const root = document.documentElement;
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let currentTheme = root.dataset.theme === 'dark' ? 'dark' : 'light';
+let running = null;
 
 const sweep = (origin, commit) => {
     if (!document.startViewTransition || prefersReducedMotion()) {
@@ -16,8 +17,11 @@ const sweep = (origin, commit) => {
         return;
     }
 
+    running?.skipTransition();
+
     root.classList.add('is-theme-sweeping');
     const transition = document.startViewTransition(commit);
+    running = transition;
 
     transition.ready
         .then(() => {
@@ -34,7 +38,12 @@ const sweep = (origin, commit) => {
         })
         .catch(() => {});
 
-    transition.finished.catch(() => {}).then(() => root.classList.remove('is-theme-sweeping'));
+    transition.finished.catch(() => {}).then(() => {
+        if (running === transition) {
+            running = null;
+            root.classList.remove('is-theme-sweeping');
+        }
+    });
 };
 
 export const initTheme = (toggle, metaTheme) => {

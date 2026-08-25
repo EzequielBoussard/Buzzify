@@ -10,7 +10,7 @@ Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos. La ú
 - **Tema claro y oscuro**, con una transición circular que se expande desde el propio botón de tema.
 - **Color del botón configurable**: ocho presets y un selector propio de tono, saturación y luminosidad.
 - **Español e inglés.** En la primera visita se elige según `navigator.language`; a partir de ahí manda lo que el visitante haya elegido.
-- **Vibración configurable** al pulsar, solo en dispositivos táctiles. Se puede apagar desde la barra.
+- **Vibración configurable** al pulsar, solo en móviles y tablets: se exige puntero grueso y ausencia de puntero fino, así que un equipo con ratón nunca ve el interruptor. Se puede apagar desde la barra.
 - **La pantalla no se apaga** mientras la página está a la vista, vía Wake Lock. Un pulsador apoyado en la mesa que se apaga solo no sirve de nada.
 - **Funciona con teclado**: `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada.
 - Las preferencias se guardan en `localStorage` y se aplican antes del primer pintado, sin parpadeo.

@@ -3,8 +3,10 @@ import { onLangChange, t } from './i18n.js';
 const STORAGE_KEY = 'haptics';
 const PULSE_MS = 50;
 
-const supported = typeof navigator.vibrate === 'function'
-    && window.matchMedia('(pointer: coarse)').matches;
+const isHandheld = () => window.matchMedia('(pointer: coarse)').matches
+    && !window.matchMedia('(any-pointer: fine)').matches;
+
+const supported = typeof navigator.vibrate === 'function' && isHandheld();
 let enabled = true;
 
 const read = () => {
