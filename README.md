@@ -2,7 +2,7 @@
 
 Pulsador de concurso para el navegador. Mantené presionado el botón y suena el buzzer, de forma continua y sin cortes, hasta que lo soltás.
 
-Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos.
+Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos. La única tipografía va autoalojada, así que el sitio no pide nada a terceros.
 
 ## Qué hace
 
@@ -10,6 +10,8 @@ Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos.
 - **Tema claro y oscuro**, con una transición circular que se expande desde el propio botón de tema.
 - **Color del botón configurable**: ocho presets y un selector propio de tono, saturación y luminosidad.
 - **Español e inglés.** En la primera visita se elige según `navigator.language`; a partir de ahí manda lo que el visitante haya elegido.
+- **Vibración configurable** al pulsar, solo en dispositivos táctiles. Se puede apagar desde la barra.
+- **La pantalla no se apaga** mientras la página está a la vista, vía Wake Lock. Un pulsador apoyado en la mesa que se apaga solo no sirve de nada.
 - **Funciona con teclado**: `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada.
 - Las preferencias se guardan en `localStorage` y se aplican antes del primer pintado, sin parpadeo.
 - **Capa de entrada** con la marca, el gesto y un conmutador de idioma, que se disipa con el primer toque. No es decorativa: las políticas de autoplay solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
@@ -33,6 +35,8 @@ index.html                 marcado y arranque de preferencias antes del primer p
 site.webmanifest           metadatos de PWA
 _headers                   cabeceras de caché y seguridad para Cloudflare Pages
 assets/audio/              audio.ogg y audio.m4a (respaldo para WebKit)
+assets/fonts/              Outfit variable, subconjunto latino, autoalojada
+assets/og-image.png        tarjeta para redes
 assets/icons/              favicons, apple-touch-icon e iconos del manifest
 src/css/style.css
 src/js/main.js             cablea los módulos con el DOM
@@ -40,6 +44,8 @@ src/js/buzzer.js           puntero y teclado sobre el botón
 src/js/audio.js            reproducción con Web Audio
 src/js/loop.js             construye el bucle sin costura
 src/js/intro.js            capa de entrada que habilita el audio
+src/js/haptics.js          vibración al pulsar y su interruptor
+src/js/wakelock.js         mantiene la pantalla encendida
 src/js/theme.js            claro/oscuro y la transición circular
 src/js/color.js            presets y selector HSL
 src/js/i18n.js             textos de accesibilidad y cambio de idioma

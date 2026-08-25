@@ -1,6 +1,8 @@
 import { initBuzzer } from './buzzer.js';
 import { initColorPicker } from './color.js';
+import { initHaptics } from './haptics.js';
 import { initIntro } from './intro.js';
+import { initWakeLock } from './wakelock.js';
 import { onLangChange, setLang, t } from './i18n.js';
 import { initTheme } from './theme.js';
 
@@ -34,4 +36,6 @@ initColorPicker({
 });
 
 initBuzzer(buzzer);
+initHaptics(document.getElementById('hapticsToggle'));
 initIntro(document.getElementById('intro'));
+initWakeLock();

@@ -1,4 +1,5 @@
 import { startBuzzer, stopBuzzer } from './audio.js';
+import { pulse } from './haptics.js';
 
 const HOLD_KEYS = new Set([' ', 'Enter']);
 
@@ -9,6 +10,7 @@ export const initBuzzer = (button) => {
         if (held) return;
         held = true;
         button.classList.add('is-pressed');
+        pulse();
         startBuzzer();
     };
 
