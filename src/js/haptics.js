@@ -1,7 +1,7 @@
 import { onLangChange, t } from './i18n.js';
 
 const STORAGE_KEY = 'haptics';
-const PULSE_MS = 30;
+const PULSE_MS = 50;
 
 const supported = typeof navigator.vibrate === 'function'
     && window.matchMedia('(pointer: coarse)').matches;
