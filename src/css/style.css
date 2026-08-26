@@ -79,6 +79,10 @@ html {
     box-sizing: inherit;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 body {
     min-height: 100vh;
     min-height: 100svh;
@@ -345,9 +349,6 @@ html[lang='en'] .lang-btn[data-lang='en'] {
     box-shadow: 0 12px 28px rgb(0 0 0 / 0.28);
 }
 
-.color-panel[hidden] {
-    display: none;
-}
 
 .color-panel__title {
     margin: 0;
