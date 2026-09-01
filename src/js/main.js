@@ -37,5 +37,5 @@ initColorPicker({
 
 initBuzzer(buzzer);
 initHaptics(document.getElementById('hapticsToggle'));
-initIntro(document.getElementById('intro'));
+initIntro(document.getElementById('intro'), document.getElementById('introNote'));
 initWakeLock();
