@@ -4,7 +4,6 @@ import { isIOS } from './platform.js';
 const OGG_URL = new URL('../../assets/audio/audio.ogg', import.meta.url);
 const AAC_URL = new URL('../../assets/audio/audio.m4a', import.meta.url);
 const RELEASE_FADE = 0.02;
-const OUTPUT_GAIN = 4;
 const ARMING_EVENTS = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'];
 const SILENT_RATE = 8000;
 const SILENT_FRAMES = 2000;
@@ -117,7 +116,6 @@ function tryPlay() {
     }
 
     const gain = ctx.createGain();
-    gain.gain.value = OUTPUT_GAIN;
     gain.connect(ctx.destination);
 
     const source = ctx.createBufferSource();
