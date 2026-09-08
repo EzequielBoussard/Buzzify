@@ -213,6 +213,7 @@ html[lang='en'] .lang-btn[data-lang='en'] {
     padding: 1.5rem;
     text-align: center;
     background: var(--intro-scrim);
+    -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
     transition: opacity 0.4s ease;
 }
@@ -358,7 +359,6 @@ html[lang='en'] .lang-btn[data-lang='en'] {
     border-radius: 10px;
     box-shadow: 0 12px 28px rgb(0 0 0 / 0.28);
 }
-
 
 .color-panel__title {
     margin: 0;
@@ -680,10 +680,7 @@ footer a:focus-visible {
     .buzzer::after,
     .color-swatch,
     .color-trigger,
-    .color-trigger__dot {
-        transition: none;
-    }
-
+    .color-trigger__dot,
     .intro {
         transition: none;
     }

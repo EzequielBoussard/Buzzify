@@ -7,12 +7,12 @@ import { onLangChange, setLang, t } from './i18n.js';
 import { initTheme } from './theme.js';
 
 const buzzer = document.getElementById('buzzer');
-const langToggle = document.querySelector('.lang-toggle');
+const langToggles = document.querySelectorAll('.lang-toggle');
 const langButtons = document.querySelectorAll('.lang-btn');
 
 onLangChange((lang) => {
     buzzer.setAttribute('aria-label', t('buzzer'));
-    langToggle.setAttribute('aria-label', t('lang'));
+    langToggles.forEach((group) => group.setAttribute('aria-label', t('lang')));
     langButtons.forEach((button) => {
         button.setAttribute('aria-pressed', String(button.dataset.lang === lang));
     });

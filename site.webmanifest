@@ -1,7 +1,10 @@
 {
+  "id": "/",
   "name": "Buzzify",
   "short_name": "Buzzify",
-  "description": "Buzzify — pulsador de concurso: mantené presionado el botón y suena el buzzer.",
+  "description": "Hold the button and it buzzes, seamlessly, until you let go.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

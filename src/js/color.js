@@ -92,13 +92,13 @@ export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturati
         });
     };
 
-    function apply(hex) {
+    const apply = (hex) => {
         current = hex.toLowerCase();
         try {
             localStorage.setItem(STORAGE_KEY, current);
         } catch {}
         render();
-    }
+    };
 
     const applyFromSliders = () => {
         apply(hslToHex(Number(hue.value), Number(saturation.value), Number(lightness.value)));
