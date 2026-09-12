@@ -61,7 +61,9 @@ El audio no es una grabación: lo genera [`tools/buzzer.py`](tools/buzzer.py) a 
 
 Un período se construye plegando la cola de cada modo sobre sí misma, así que el tramo sostenido es exactamente periódico en 735 muestras a 44,1 kHz. La lengüeta igual arranca desde el reposo: los modos pesados tardan más en llegar a su excursión completa que los livianos, y por eso los primeros 300 ms no son loopeables.
 
-Se distribuye en Ogg Vorbis y AAC, los dos nivelados al mismo RMS para que el volumen no dependa del navegador. Regenerar los dos archivos, con ffmpeg en el PATH:
+El nivel se fija con ponderación A y no con RMS crudo. El oído es mucho más sensible cerca de los 3 kHz que en los 120 Hz del zumbador, así que dos versiones al mismo RMS pueden quedar muy distintas de volumen; ponderar primero deja el nivel percibido quieto mientras se retocan los modos. Los dos formatos salen del mismo archivo, así que tampoco cambia según el navegador.
+
+Regenerar ambos, con ffmpeg en el PATH:
 
 ```bash
 uv run --with numpy python tools/buzzer.py
@@ -95,7 +97,7 @@ En iOS hay dos obstáculos distintos. El primero es la política de autoplay: el
 
 Sin paso de compilación. En Cloudflare Pages: preset de framework **None**, comando de build vacío, directorio de salida la raíz del repositorio.
 
-`_headers` fija revalidación en el HTML y en `src/`, y caché larga en audio, fuentes e iconos. Es necesario porque los archivos no llevan hash en el nombre: sin eso, una caché larga dejaría a los visitantes con la versión anterior después de cada despliegue.
+`_headers` fija revalidación en el HTML, en `src/` y en el audio, y una semana en fuentes e iconos. Ningún archivo lleva hash en el nombre, así que ninguno puede marcarse `immutable`: el audio se regeneró dos veces y quien ya hubiera entrado se habría quedado con la primera copia. Fuentes e iconos aguantan una semana porque cambiarlos implica cambiar también el nombre.
 
 El mismo archivo declara una CSP con `default-src 'none'` y permisos explícitos por tipo de recurso. El script de arranque y el `<style>` del `<noscript>` van inline, así que se autorizan por hash. Si se edita cualquiera de los dos hay que recalcular el suyo; el parser normaliza CRLF a LF antes de hashear, de ahí el reemplazo:
 

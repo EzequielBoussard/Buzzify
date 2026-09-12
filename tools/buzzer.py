@@ -30,18 +30,18 @@ STRIKE_FORCE = (1.00, 0.85)         # the two strikes per mains cycle
 
 # frequency Hz, decay ms, weight, force per strike
 MODES = [
-    (125.0, 34.0, 1.15, (1.00, 1.00)),
+    (125.0, 34.0, 0.70, (1.00, 1.00)),
     (358.0, 24.0, 0.69, (1.00, 0.96)),
     (486.0, 17.0, 0.52, (1.00, 0.90)),
     (838.0, 13.0, 0.95, (1.00, 0.78)),
-    (1618.0, 9.0, 3.94, (1.00, 0.52)),
-    (3180.0, 5.0, 2.14, (1.00, 0.45)),
+    (1618.0, 9.0, 3.94, (1.00, 0.92)),
+    (3180.0, 5.0, 2.14, (1.00, 0.92)),
 ]
 CLICK_WEIGHT = 0.45
-CLICK_WIDTH_MS = 0.35   # the contact is soft, not a spike
+CLICK_WIDTH_MS = 0.75   # the contact is soft, not a spike
 CLICK_HZ = 1200.0
 HEAVY_HZ = 300.0        # modes below this are the ones that take time to build
-TILT_HZ = 3400.0
+TILT_HZ = 2400.0
 RING_PERIODS = 24
 WARMUP_PERIODS = 12
 DURATION = 0.65
@@ -52,7 +52,7 @@ FADE_IN_MS = 2.0
 FADE_OUT_MS = 8.0
 
 STEADY_FROM = 0.35
-TARGET_RMS = 0.1541     # -16.24 dBFS in the sustained part; audio.js adds no gain
+TARGET_DBA = -22.14     # sustained level, A-weighted; audio.js adds no gain
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, 'assets', 'audio')
@@ -121,6 +121,26 @@ def rms(x):
     return float(np.sqrt((x ** 2).mean()))
 
 
+def a_weighted_rms(x):
+    """Level as the ear reads it, per IEC 61672.
+
+    Plain RMS is the wrong thing to normalise by here: the ear is far more
+    sensitive around 3 kHz than at 120 Hz, so two takes at the same RMS can sit
+    very differently in the room. Weighting first keeps the perceived level put
+    while the modes are being retuned.
+    """
+    freq = np.fft.rfftfreq(len(x), 1 / SR)
+    f2 = np.square(freq)
+    numerator = (12194.0 ** 2) * f2 ** 2
+    denominator = ((f2 + 20.6 ** 2)
+                   * np.sqrt((f2 + 107.7 ** 2) * (f2 + 737.9 ** 2))
+                   * (f2 + 12194.0 ** 2))
+    with np.errstate(divide='ignore', invalid='ignore'):
+        curve = np.where(denominator > 0, numerator / denominator, 0.0)
+    curve *= 10 ** (2.0 / 20)       # 0 dB at 1 kHz
+    return rms(np.fft.irfft(np.fft.rfft(x) * curve, len(x)))
+
+
 def build():
     frames = int(SR * DURATION)
     t = np.arange(frames) / SR
@@ -139,7 +159,8 @@ def build():
     signal[:fade_in] *= np.linspace(0, 1, fade_in)
     signal[-fade_out:] *= np.linspace(1, 0, fade_out)
 
-    return signal * (TARGET_RMS / rms(signal[int(STEADY_FROM * SR):]))
+    target = 10 ** (TARGET_DBA / 20)
+    return signal * (target / a_weighted_rms(signal[int(STEADY_FROM * SR):]))
 
 
 def write_wav(path, signal):
@@ -172,8 +193,10 @@ if __name__ == '__main__':
     os.remove(wav)
 
     print(f'{DURATION} s, period {PERIOD} samples at {SR} Hz')
+    sustained = signal[int(STEADY_FROM * SR):]
     print(f'peak {20 * np.log10(np.abs(signal).max()):.2f} dBFS, '
-          f'sustained rms {20 * np.log10(rms(signal[int(STEADY_FROM * SR):])):.2f} dBFS')
+          f'sustained {20 * np.log10(rms(sustained)):.2f} dBFS / '
+          f'{20 * np.log10(a_weighted_rms(sustained)):.2f} dBA')
     print(f'period-to-period error in the sustained tail: {drift:.2e}')
     for name in ('audio.ogg', 'audio.m4a'):
         path = os.path.join(OUT_DIR, name)
