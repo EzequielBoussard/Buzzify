@@ -1,9 +1,45 @@
+# sistema operativo
 .DS_Store
+._*
 Thumbs.db
 desktop.ini
 
+# editores y asistentes locales
 .vscode/
 .idea/
+.zed/
 .claude/
+.cursor/
+.cursorrules
+.cursorignore
+.windsurf/
+.windsurfrules
+.continue/
+.codeium/
+.aider*
+.cline*
+.roo/
+.roomodes
+.junie/
+.specstory/
+.serena/
+.mcp.json
+AGENTS.md
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
+.github/copilot-instructions.md
 
+# python de tools/
 __pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# intermedios del generador de audio
+assets/audio/*.wav
+
+# nunca
+.env
+.env.*
+*.log
