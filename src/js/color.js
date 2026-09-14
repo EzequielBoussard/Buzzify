@@ -2,7 +2,6 @@ import { onLangChange, t } from './i18n.js';
 
 const STORAGE_KEY = 'buttonColor';
 const DEFAULT_COLOR = '#2ecc71';
-const STALE_DEFAULTS = ['#c0392b', '#e84c3d'];
 
 const PRESETS = [
     ['red', '#e84c3d'],
@@ -57,8 +56,7 @@ const readStored = () => {
     try {
         stored = localStorage.getItem(STORAGE_KEY);
     } catch {}
-    if (!stored || STALE_DEFAULTS.includes(stored.toLowerCase())) return DEFAULT_COLOR;
-    return stored.toLowerCase();
+    return /^#[0-9a-f]{6}$/i.test(stored ?? '') ? stored.toLowerCase() : DEFAULT_COLOR;
 };
 
 export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturation, lightness, value }) => {
@@ -128,6 +126,7 @@ export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturati
     onLangChange(() => {
         const names = t('colors');
         swatches.forEach((swatch) => swatch.setAttribute('aria-label', names[swatch.dataset.id]));
+        value.setAttribute('aria-label', t('hex'));
         hue.setAttribute('aria-label', t('hue'));
         saturation.setAttribute('aria-label', t('saturation'));
         lightness.setAttribute('aria-label', t('lightness'));

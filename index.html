@@ -41,8 +41,7 @@
                 if (meta) meta.setAttribute('content', theme === 'light' ? '#f4f4f4' : '#14161a');
 
                 var color = localStorage.getItem('buttonColor');
-                var stale = ['#c0392b', '#e84c3d'];
-                if (color && /^#[0-9a-f]{6}$/i.test(color) && stale.indexOf(color.toLowerCase()) < 0) {
+                if (color && /^#[0-9a-f]{6}$/i.test(color)) {
                     root.style.setProperty('--color-primary', color);
                 }
             } catch (error) {
@@ -121,7 +120,7 @@
         </button>
 
         <div class="color-control">
-            <button type="button" id="colorTrigger" class="color-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="colorPanel">
+            <button type="button" id="colorTrigger" class="color-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="colorPanel">
                 <span class="color-trigger__dot" aria-hidden="true"></span>
                 <span class="color-trigger__label"><span data-t="en">Button colour</span><span data-t="es">Color del botón</span></span>
             </button>
