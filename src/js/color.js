@@ -14,6 +14,8 @@ const PRESETS = [
     ['pink', '#e84393'],
 ];
 
+const STEP_KEYS = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+
 const root = document.documentElement;
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -85,8 +87,10 @@ export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturati
         saturation.value = String(Math.round(s));
         lightness.value = String(clamp(Math.round(l), Number(lightness.min), Number(lightness.max)));
         value.textContent = current.toUpperCase();
-        swatches.forEach((swatch) => {
-            swatch.setAttribute('aria-checked', String(swatch.dataset.value === current));
+        const checked = swatches.findIndex((swatch) => swatch.dataset.value === current);
+        swatches.forEach((swatch, index) => {
+            swatch.setAttribute('aria-checked', String(index === checked));
+            swatch.tabIndex = index === Math.max(checked, 0) ? 0 : -1;
         });
     };
 
@@ -97,6 +101,26 @@ export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturati
         } catch {}
         render();
     };
+
+    const moveTo = (index) => {
+        const swatch = swatches[(index + swatches.length) % swatches.length];
+        apply(swatch.dataset.value);
+        swatch.focus();
+    };
+
+    presets.addEventListener('keydown', (event) => {
+        const index = swatches.indexOf(event.target);
+        if (index < 0) return;
+
+        const step = STEP_KEYS[event.key];
+        if (step) {
+            event.preventDefault();
+            moveTo(index + step);
+        } else if (event.key === 'Home' || event.key === 'End') {
+            event.preventDefault();
+            moveTo(event.key === 'Home' ? 0 : swatches.length - 1);
+        }
+    });
 
     const applyFromSliders = () => {
         apply(hslToHex(Number(hue.value), Number(saturation.value), Number(lightness.value)));
