@@ -32,6 +32,7 @@ Después, `http://localhost:8777`.
 
 ```
 index.html                 marcado y arranque de preferencias antes del primer pintado
+404.html                   pagina de ruta inexistente, sin scripts
 site.webmanifest           metadatos de PWA
 _headers                   cabeceras de caché y seguridad para Cloudflare Pages
 assets/audio/              audio.ogg y audio.m4a (respaldo para WebKit)
@@ -96,6 +97,8 @@ En iOS hay dos obstáculos distintos. El primero es la política de autoplay: el
 ## Despliegue
 
 Sin paso de compilación. En Cloudflare Pages: preset de framework **None**, comando de build vacío, directorio de salida la raíz del repositorio.
+
+Sin un `404.html` en la raiz, Cloudflare Pages responde cualquier ruta inexistente con un 200 y la portada. Esa pagina existe para que devuelva un 404 de verdad; no lleva scripts, así que no suma hashes a la CSP.
 
 `_headers` fija revalidación en el HTML, en `src/` y en el audio, y una semana en fuentes e iconos. Ningún archivo lleva hash en el nombre, así que ninguno puede marcarse `immutable`: el audio se regeneró dos veces y quien ya hubiera entrado se habría quedado con la primera copia. Fuentes e iconos aguantan una semana porque cambiarlos implica cambiar también el nombre.
 
