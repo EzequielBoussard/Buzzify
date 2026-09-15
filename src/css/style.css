@@ -124,9 +124,17 @@ header {
     font-size: clamp(1.25rem, 6vw, 2.75rem);
 }
 
-.stray {
+.stray header span {
+    display: block;
+}
+
+.stray header span[lang='es'] {
+    font-size: 0.62em;
+    color: var(--color-muted);
+}
+
+.stray p {
     margin: 0;
-    font-size: 1rem;
 }
 
 .stray a {

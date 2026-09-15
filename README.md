@@ -32,7 +32,7 @@ Después, `http://localhost:8777`.
 
 ```
 index.html                 marcado y arranque de preferencias antes del primer pintado
-404.html                   pagina de ruta inexistente, sin scripts
+404.html                   pagina de ruta inexistente, sin scripts, en los dos idiomas a la vez
 site.webmanifest           metadatos de PWA
 _headers                   cabeceras de caché y seguridad para Cloudflare Pages
 assets/audio/              audio.ogg y audio.m4a (respaldo para WebKit)
