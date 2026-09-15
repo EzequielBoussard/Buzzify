@@ -12,7 +12,7 @@ Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos. La ú
 - **Español e inglés.** En la primera visita se elige según `navigator.language`; a partir de ahí manda lo que el visitante haya elegido.
 - **Vibración configurable** al pulsar, solo en móviles y tablets: se exige puntero grueso y ausencia de puntero fino, así que un equipo con ratón nunca ve el interruptor. Se puede apagar desde la barra. iOS no implementa la Vibration API, así que ahí el interruptor tampoco aparece.
 - **La pantalla no se apaga** mientras la página está a la vista, vía Wake Lock. Un pulsador apoyado en la mesa que se apaga solo no sirve de nada.
-- **Funciona con teclado**: `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada.
+- **Funciona con teclado**: `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada, y los presets de color se recorren con las flechas, con `Inicio` y `Fin` en los extremos.
 - Las preferencias se guardan en `localStorage` y se aplican antes del primer pintado, sin parpadeo.
 - **Capa de entrada** con la marca, el gesto y un conmutador de idioma, que se disipa con el primer toque. No es decorativa: las políticas de autoplay solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
 
@@ -77,9 +77,9 @@ El primero es que el archivo es un disparo único: abre y cierra con una rampa. 
 
 El segundo es que **no es un tono estacionario**: su banda grave crece alrededor de un 40 % durante los primeros 300 ms, mientras la banda aguda ya está entera desde el primer golpe. Cualquier bucle que incluya ese tramo reinicia el bajo más abajo de donde terminó, y eso se escucha como un bombo periódico.
 
-`loop.js` recorta el bucle del tramo donde la banda grave ya se estabilizó, busca el largo que mejor correlaciona con el arranque —sin asumir periodicidad— y funde la cola sobre la cabeza con un crossfade lineal de 20 ms. El corte cae en 320 ms y el buffer queda entre 150 y 200 ms según el formato; el análisis tarda entre 10 y 30 ms en el hilo principal, así que corre en la primera pulsación sin bloquear nada.
+`loop.js` recorta el bucle del tramo donde la banda grave ya se estabilizó, busca el largo que mejor correlaciona con el arranque —sin asumir periodicidad— y funde la cola sobre la cabeza con un crossfade lineal de 20 ms. El corte cae en 320 ms y el buffer queda en 150 ms; el análisis tarda menos de 20 ms en el hilo principal, así que corre en la primera pulsación sin bloquear nada.
 
-El algoritmo no sabe nada del modelo que generó el sonido y aun así el largo que elige cae siempre en un número entero de ciclos de red —9 o 12 períodos—, en ogg y en aac, a 44,1, 48 y 96 kHz. El salto en la unión queda entre un 13 % y un 49 % del salto típico entre dos muestras contiguas del propio archivo: la costura es más chica que el material que une.
+El algoritmo no sabe nada del modelo que generó el sonido y aun así el largo que elige cae siempre en 9 ciclos de red exactos, en ogg y en aac, a 44,1, 48, 88,2, 96 y 192 kHz. Lo que queda en la unión es el ruido de cuantización del codec, no un escalón del bucle: entre −38,6 y −67,8 dBFS según el formato, y nunca más de un tercio del percentil 99 de los saltos entre muestras contiguas del propio archivo. La costura es más suave que los flancos que el sonido ya tiene.
 
 Los umbrales están en milisegundos y no en muestras, para que el resultado no dependa del sample rate al que el navegador abra el `AudioContext`.
 
