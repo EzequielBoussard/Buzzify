@@ -371,6 +371,9 @@ html[lang='en'] .lang-btn[data-lang='en'] {
     display: grid;
     gap: 0.75em;
     min-width: 13.5em;
+    max-height: calc(100svh - 5em);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 0.85em;
     background: var(--color-bg);
     border: 1px solid var(--color-border);
