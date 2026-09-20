@@ -63,6 +63,7 @@ const readStored = () => {
 
 export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturation, lightness, value }) => {
     let current = readStored();
+    let angles = hexToHsl(current);
 
     const swatches = PRESETS.map(([id, hex]) => {
         const swatch = document.createElement('button');
@@ -78,7 +79,7 @@ export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturati
     });
 
     const render = () => {
-        const { h, s, l } = hexToHsl(current);
+        const { h, s, l } = angles;
         root.style.setProperty('--color-primary', current);
         custom.style.setProperty('--hue', String(Math.round(h)));
         custom.style.setProperty('--sat', `${Math.round(s)}%`);
@@ -94,8 +95,9 @@ export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturati
         });
     };
 
-    const apply = (hex) => {
+    const apply = (hex, hsl) => {
         current = hex.toLowerCase();
+        angles = hsl ?? hexToHsl(current);
         try {
             localStorage.setItem(STORAGE_KEY, current);
         } catch {}
@@ -123,7 +125,8 @@ export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturati
     });
 
     const applyFromSliders = () => {
-        apply(hslToHex(Number(hue.value), Number(saturation.value), Number(lightness.value)));
+        const hsl = { h: Number(hue.value), s: Number(saturation.value), l: Number(lightness.value) };
+        apply(hslToHex(hsl.h, hsl.s, hsl.l), hsl);
     };
 
     [hue, saturation, lightness].forEach((slider) => {
