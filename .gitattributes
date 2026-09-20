@@ -1,0 +1,9 @@
+# todo el texto se guarda con LF, sin importar el sistema de quien clone
+* text=auto eol=lf
+
+# binarios: que git no intente convertir nada
+*.png binary
+*.ico binary
+*.woff2 binary
+*.ogg binary
+*.m4a binary
