@@ -13,6 +13,7 @@ Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos. La ú
 - **Vibración configurable** al pulsar, solo en móviles y tablets: se exige puntero grueso y ausencia de puntero fino, así que un equipo con ratón nunca ve el interruptor. Se puede apagar desde la barra. iOS no implementa la Vibration API, así que ahí el interruptor tampoco aparece.
 - **La pantalla no se apaga** mientras la página está a la vista, vía Wake Lock. Un pulsador apoyado en la mesa que se apaga solo no sirve de nada.
 - **Funciona con teclado**: `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada, y los presets de color se recorren con las flechas, con `Inicio` y `Fin` en los extremos.
+- **Funciona sin conexión** después de la primera visita, y se puede instalar como aplicación (ver [Sin conexión](#sin-conexión)).
 - Las preferencias se guardan en `localStorage` y se aplican antes del primer pintado, sin parpadeo.
 - **Capa de entrada** con la marca, el gesto y un conmutador de idioma, que se disipa con el primer toque. No es decorativa: las políticas de autoplay solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
 
@@ -33,6 +34,7 @@ Después, `http://localhost:8777`.
 ```
 index.html                 marcado y arranque de preferencias antes del primer pintado
 404.html                   pagina de ruta inexistente, sin scripts, en los dos idiomas a la vez
+sw.js                      service worker: guarda el sitio y lo sirve sin red
 site.webmanifest           metadatos de PWA
 _headers                   cabeceras de caché y seguridad para Cloudflare Pages
 assets/audio/              audio.ogg y audio.m4a (respaldo para WebKit)
@@ -47,6 +49,8 @@ src/js/loop.js             construye el bucle sin costura
 src/js/intro.js            capa de entrada que habilita el audio
 src/js/haptics.js          vibración al pulsar y su interruptor
 src/js/wakelock.js         mantiene la pantalla encendida
+src/js/offline.js          registra el service worker
+src/js/storage.js          lee y escribe preferencias sin romperse en modo privado
 src/js/platform.js         detección de iOS, compartida por audio e intro
 src/js/theme.js            claro/oscuro y la transición circular
 src/js/color.js            presets y selector HSL
@@ -86,6 +90,20 @@ Los umbrales están en milisegundos y no en muestras, para que el resultado no d
 
 Se reproduce con `AudioBufferSourceNode` y `loop = true`, que repite el buffer con exactitud de muestra.
 
+## Sin conexión
+
+El sitio entero pesa 117 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entran los iconos grandes ni la imagen para redes, que solo hacen falta estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
+
+Se sirve desde la caché y se revalida de fondo. La página abre al instante y una versión nueva queda lista para la visita siguiente. La alternativa era invalidar la caché en cada despliegue, y eso se olvida.
+
+Como hay manifest y service worker con manejador de `fetch`, la página se puede instalar: en Android y escritorio el navegador ofrece hacerlo, y en iOS se agrega desde Compartir. Instalada abre sin barra de direcciones y sin conexión.
+
+Tres casos que el service worker atiende aparte:
+
+- Un enlace compartido llega con `?utm_source` y demás. En una navegación la query no cuenta para buscar en caché, y las respuestas con query no se guardan: si no, cada variante dejaría su propia copia de la portada.
+- Una ruta inexistente sin red devuelve la 404 guardada, pero reetiquetada como 404. La copia en caché es un 200 y servirla tal cual diría que la ruta existe.
+- Safari pide medios por tramos. Una respuesta guardada es entera, y contestar 200 a un `Range` rompe la reproducción, así que esas peticiones van directo a la red.
+
 ## Compatibilidad
 
 El audio se sirve en Ogg Vorbis, con una copia en AAC que se elige automáticamente cuando el navegador no puede decodificar Vorbis, que es el caso de WebKit. Si la decodificación del formato elegido falla de todas formas, se reintenta con el otro.
@@ -100,9 +118,11 @@ Sin paso de compilación. En Cloudflare Pages: preset de framework **None**, com
 
 Sin un `404.html` en la raiz, Cloudflare Pages responde cualquier ruta inexistente con un 200 y la portada. Esa pagina existe para que devuelva un 404 de verdad; no lleva scripts, así que no suma hashes a la CSP.
 
-`_headers` fija revalidación en el HTML, en `src/` y en el audio, y una semana en fuentes e iconos. Ningún archivo lleva hash en el nombre, así que ninguno puede marcarse `immutable`: el audio se regeneró dos veces y quien ya hubiera entrado se habría quedado con la primera copia. Fuentes e iconos aguantan una semana porque cambiarlos implica cambiar también el nombre.
+`_headers` fija revalidación en el HTML, en `src/`, en `sw.js` y en el audio, y una semana en fuentes e iconos. Ningún archivo lleva hash en el nombre, así que ninguno puede marcarse `immutable`: el audio se regeneró dos veces y quien ya hubiera entrado se habría quedado con la primera copia. Fuentes e iconos aguantan una semana porque cambiarlos implica cambiar también el nombre.
 
-El mismo archivo declara una CSP con `default-src 'none'` y permisos explícitos por tipo de recurso. El script de arranque y el `<style>` del `<noscript>` van inline, así que se autorizan por hash. Si se edita cualquiera de los dos hay que recalcular el suyo; el parser normaliza CRLF a LF antes de hashear, de ahí el reemplazo:
+Al agregar o renombrar un archivo hay que ponerlo en la lista `SHELL` de [`sw.js`](sw.js), o no se guarda y la página queda rota sin conexión. Cambiar el contenido de uno que ya está en la lista no pide nada: la revalidación de fondo lo trae sola. `VERSION` solo se toca para tirar la caché entera, por ejemplo al sacar un archivo de la lista.
+
+El mismo archivo declara una CSP con `default-src 'none'` y permisos explícitos por tipo de recurso. El service worker necesita `worker-src 'self'`; sin declararlo heredaría de `script-src`, pero conviene que esté dicho. El script de arranque y el `<style>` del `<noscript>` van inline, así que se autorizan por hash. Si se edita cualquiera de los dos hay que recalcular el suyo; el parser normaliza CRLF a LF antes de hashear, de ahí el reemplazo:
 
 ```bash
 python - <<'PY'

@@ -7,7 +7,7 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-  Content-Security-Policy: default-src 'none'; script-src 'self' 'sha256-cq+u/NbnmMhOAKN5Sl8eR/7V3dZQDs4jBAyUZLyouAs='; style-src 'self' 'sha256-AcblDRRZwa/bl/uEVMS0Qliu7BOb1DfLAYglsh1mK3k='; img-src 'self'; font-src 'self'; media-src 'self' blob:; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'sha256-cq+u/NbnmMhOAKN5Sl8eR/7V3dZQDs4jBAyUZLyouAs='; style-src 'self' 'sha256-AcblDRRZwa/bl/uEVMS0Qliu7BOb1DfLAYglsh1mK3k='; img-src 'self'; font-src 'self'; media-src 'self' blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
 
 /
   Cache-Control: public, max-age=0, must-revalidate
@@ -19,6 +19,9 @@
   Cache-Control: public, max-age=0, must-revalidate
 
 /src/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/sw.js
   Cache-Control: public, max-age=0, must-revalidate
 
 /site.webmanifest
