@@ -124,6 +124,7 @@ function tryPlay() {
     source.loopStart = 0;
     source.loopEnd = ready.duration;
     source.connect(gain);
+    source.addEventListener('ended', () => gain.disconnect(), { once: true });
     source.start();
 
     active = { source, gain };

@@ -46,7 +46,10 @@ const findLastLoudBlock = (levels) => {
 };
 
 const findPlateauStart = (levels, lastBlock, tolerance) => {
-    const reference = median(levels.slice(Math.floor(levels.length * 0.6), lastBlock));
+    const tail = levels.slice(Math.floor(levels.length * 0.6), lastBlock);
+    const reference = median(tail);
+    if (!reference) return lastBlock;
+
     let first = lastBlock;
     for (let i = lastBlock - 1; i >= 0; i -= 1) {
         if (Math.abs(levels[i] - reference) / reference > tolerance) break;
