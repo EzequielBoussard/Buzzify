@@ -1,4 +1,5 @@
 import { onLangChange, t } from './i18n.js';
+import { readSetting, saveSetting } from './storage.js';
 
 const STORAGE_KEY = 'haptics';
 const PULSE_MS = 50;
@@ -9,13 +10,7 @@ const isHandheld = () => window.matchMedia('(pointer: coarse)').matches
 const supported = typeof navigator.vibrate === 'function' && isHandheld();
 let enabled = true;
 
-const read = () => {
-    try {
-        return localStorage.getItem(STORAGE_KEY) !== 'off';
-    } catch {
-        return true;
-    }
-};
+const read = () => readSetting(STORAGE_KEY) !== 'off';
 
 export const pulse = () => {
     if (supported && enabled) navigator.vibrate(PULSE_MS);
@@ -34,9 +29,7 @@ export const initHaptics = (toggle) => {
 
     toggle.addEventListener('click', () => {
         enabled = !enabled;
-        try {
-            localStorage.setItem(STORAGE_KEY, enabled ? 'on' : 'off');
-        } catch {}
+        saveSetting(STORAGE_KEY, enabled ? 'on' : 'off');
         render();
         pulse();
     });

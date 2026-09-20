@@ -1,3 +1,5 @@
+import { saveSetting } from './storage.js';
+
 const STORAGE_KEY = 'lang';
 const DEFAULT_LANG = 'en';
 
@@ -62,8 +64,6 @@ export const setLang = (lang) => {
     if (!strings[lang]) return;
     current = lang;
     document.documentElement.lang = lang;
-    try {
-        localStorage.setItem(STORAGE_KEY, lang);
-    } catch {}
+    saveSetting(STORAGE_KEY, lang);
     listeners.forEach((callback) => callback(lang));
 };

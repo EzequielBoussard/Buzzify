@@ -26,6 +26,9 @@ let active = null;
 let keepAlive = null;
 let wanted = false;
 
+// Un WAV mudo armado a mano: 44 bytes de cabecera y el resto en cero. Es para
+// iOS viejo, donde reproducirlo en bucle cambia la categoria de audio del
+// sistema y saca el sonido del interruptor lateral de silencio.
 const silentTrack = () => {
     const bytes = new ArrayBuffer(44 + SILENT_FRAMES * 2);
     const view = new DataView(bytes);

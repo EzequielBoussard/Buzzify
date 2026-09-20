@@ -1,4 +1,5 @@
 import { onLangChange, t } from './i18n.js';
+import { saveSetting } from './storage.js';
 
 const STORAGE_KEY = 'theme';
 const META_COLORS = { dark: '#14161a', light: '#f4f4f4' };
@@ -52,9 +53,7 @@ export const initTheme = (toggle, metaTheme) => {
     const apply = (theme) => {
         root.dataset.theme = theme;
         metaTheme?.setAttribute('content', META_COLORS[theme]);
-        try {
-            localStorage.setItem(STORAGE_KEY, theme);
-        } catch {}
+        saveSetting(STORAGE_KEY, theme);
         label();
     };
 

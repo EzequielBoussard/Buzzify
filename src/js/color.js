@@ -1,4 +1,5 @@
 import { onLangChange, t } from './i18n.js';
+import { readSetting, saveSetting } from './storage.js';
 
 const STORAGE_KEY = 'buttonColor';
 const DEFAULT_COLOR = '#2ecc71';
@@ -54,10 +55,7 @@ const hslToHex = (h, s, l) => {
 };
 
 const readStored = () => {
-    let stored = null;
-    try {
-        stored = localStorage.getItem(STORAGE_KEY);
-    } catch {}
+    const stored = readSetting(STORAGE_KEY);
     return /^#[0-9a-f]{6}$/i.test(stored ?? '') ? stored.toLowerCase() : DEFAULT_COLOR;
 };
 
@@ -98,9 +96,7 @@ export const initColorPicker = ({ trigger, panel, presets, custom, hue, saturati
     const apply = (hex, hsl) => {
         current = hex.toLowerCase();
         angles = hsl ?? hexToHsl(current);
-        try {
-            localStorage.setItem(STORAGE_KEY, current);
-        } catch {}
+        saveSetting(STORAGE_KEY, current);
         render();
     };
 

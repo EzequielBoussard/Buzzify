@@ -1,9 +1,27 @@
+// El archivo es un disparo unico y su banda grave sigue creciendo durante los
+// primeros 300 ms. Loopear ese tramo se oye como un bombo, asi que primero se
+// busca donde el grave se estabiliza y recien ahi el largo del bucle.
+//
+// Todo va en milisegundos y en Hz, nunca en muestras: el navegador abre el
+// AudioContext al sample rate que quiere y el resultado no puede depender de
+// eso.
+
 const BLOCK_MS = 10;
 const SILENCE_RATIO = 0.5;
 const LOW_CUTOFF = 120;
+
+// Cuanto puede alejarse un bloque de la referencia sin cortar la meseta. Se
+// prueban en orden: si con el 12 % no queda tramo suficiente para un bucle,
+// se afloja, y el 1 final acepta cualquier cosa antes que rendirse.
 const PLATEAU_TOLERANCES = [0.12, 0.2, 0.35, 1];
+
 const MATCH_WINDOW_MS = 90;
+
+// La pasada gruesa mira una muestra de cada ocho a 44,1 kHz, y el mismo tramo
+// de tiempo a cualquier otro rate. Despues se afina de a una muestra.
 const COARSE_BANDWIDTH = 5512.5;
+
+// Piso del bucle. Mas corto empieza a sonar a tono en vez de a zumbido.
 const MIN_LOOP_MS = 150;
 const CROSSFADE_MS = 20;
 
