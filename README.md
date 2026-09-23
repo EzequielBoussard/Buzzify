@@ -120,7 +120,7 @@ Sin un `404.html` en la raiz, Cloudflare Pages responde cualquier ruta inexisten
 
 `_headers` fija revalidación en el HTML, en `src/`, en `sw.js` y en el audio, y una semana en fuentes e iconos. Ningún archivo lleva hash en el nombre, así que ninguno puede marcarse `immutable`: el audio se regeneró dos veces y quien ya hubiera entrado se habría quedado con la primera copia. Fuentes e iconos aguantan una semana porque cambiarlos implica cambiar también el nombre.
 
-Al agregar o renombrar un archivo hay que ponerlo en la lista `SHELL` de [`sw.js`](sw.js), o no se guarda y la página queda rota sin conexión. Cambiar el contenido de uno que ya está en la lista no pide nada: la revalidación de fondo lo trae sola. `VERSION` solo se toca para tirar la caché entera, por ejemplo al sacar un archivo de la lista.
+Al agregar o renombrar un archivo hay que ponerlo en la lista `SHELL` de [`sw.js`](sw.js), o no se guarda y la página queda rota sin conexión. Es el único paso manual. Cambiarle el contenido a uno que ya está en la lista no pide nada, y sacarlo de la lista tampoco: al activarse, el worker borra de la caché todo lo que ya no figura en `SHELL`. `VERSION` queda para tirar la caché entera de una.
 
 El mismo archivo declara una CSP con `default-src 'none'` y permisos explícitos por tipo de recurso. El service worker necesita `worker-src 'self'`; sin declararlo heredaría de `script-src`, pero conviene que esté dicho. El script de arranque y el `<style>` del `<noscript>` van inline, así que se autorizan por hash. Si se edita cualquiera de los dos hay que recalcular el suyo; el parser normaliza CRLF a LF antes de hashear, de ahí el reemplazo:
 

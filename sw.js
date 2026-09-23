@@ -1,6 +1,6 @@
-// El sitio entero pesa poco mas de 100 KB, asi que se guarda completo la
-// primera vez y despues funciona sin red. Un pulsador que deja de andar
-// porque el wifi del salon se cayo no sirve de nada.
+// El sitio entero pesa 117 KB, asi que se guarda completo la primera vez y
+// despues funciona sin red. Un pulsador que deja de andar porque el wifi del
+// salon se cayo no sirve de nada.
 //
 // Se sirve desde la cache y se revalida de fondo: la pagina abre al instante
 // y una version nueva queda lista para la visita siguiente. La alternativa
@@ -39,35 +39,41 @@ const SHELL = [
     '/assets/audio/audio.m4a',
 ];
 
+const inShell = (url) => !url.search && SHELL.includes(url.pathname);
+
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE).then((cache) => cache.addAll(SHELL)),
     );
 });
 
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys()
-            .then((names) => Promise.all(
-                names.filter((name) => name !== CACHE).map((name) => caches.delete(name)),
-            ))
-            .then(() => self.clients.claim()),
+// Se van las caches de otras versiones y, dentro de la actual, lo que ya no
+// figura en SHELL. Asi sacar un archivo de la lista se arregla solo y VERSION
+// queda para cuando haga falta tirar todo de una.
+const prune = async () => {
+    const names = await caches.keys();
+    await Promise.all(names.filter((name) => name !== CACHE).map((name) => caches.delete(name)));
+
+    const cache = await caches.open(CACHE);
+    const stored = await cache.keys();
+    await Promise.all(
+        stored.filter((request) => !inShell(new URL(request.url)))
+            .map((request) => cache.delete(request)),
     );
+};
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(prune().then(() => self.clients.claim()));
 });
 
 const refresh = async (request) => {
     try {
         const response = await fetch(request);
 
-        // Las respuestas de otro origen llegan opacas y no se pueden inspeccionar;
-        // guardarlas seria guardar un error a ciegas. Y las que traen query no
-        // se guardan nunca: cada link con ?utm_source distinto dejaria su propia
-        // copia de la portada hasta llenar la cuota.
-        const guardable = response.ok
-            && response.type === 'basic'
-            && !new URL(request.url).search;
-
-        if (guardable) {
+        // Solo se guarda lo que esta en SHELL. La cache queda acotada a esa
+        // lista y nada mas puede entrar: ni un error, ni /?utm_source=algo,
+        // que dejaria una copia de la portada por cada link compartido.
+        if (response.ok && inShell(new URL(request.url))) {
             const cache = await caches.open(CACHE);
             await cache.put(request, response.clone());
         }
