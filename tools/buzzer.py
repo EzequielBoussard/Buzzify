@@ -1,21 +1,21 @@
-"""Generate the buzzer asset in assets/audio/.
+"""Genera el audio del zumbador en assets/audio/.
 
-The sound is synthesised, not recorded. A mains buzzer is a reed pulled by a
-coil energised twice per mains cycle; each pull is a strike, made of a soft
-contact click plus a set of ringing mechanical modes. Consecutive strikes are
-not identical, so the bright content carries sidebands at the mains rate while
-the heavy modes repeat at twice it. That asymmetry is what makes a buzzer sound
-like a buzzer instead of a tone.
+El sonido esta sintetizado, no grabado. Un zumbador de red es una lengueta que
+una bobina atrae dos veces por ciclo; cada tiron es un golpe, con un click de
+contacto blando y un puñado de modos mecanicos que resuenan. Los golpes
+consecutivos no son identicos, asi que el contenido brillante lleva bandas
+laterales a la frecuencia de red mientras los modos graves repiten al doble.
+Esa asimetria es lo que hace que un zumbador suene a zumbador y no a tono.
 
-One period is built with wrap-around, so the sustained section is exactly
-periodic at 735 samples and repeats without a seam by construction. The reed
-still spins up: the heavy modes need longer to reach full excursion than the
-light ones, which is why the first 300 ms are not loopable and src/js/loop.js
-has to look for the plateau.
+El periodo se construye plegando la cola sobre si misma, asi que el tramo
+sostenido es exactamente periodico en 735 muestras y repite sin costura por
+construccion. La lengueta igual arranca desde el reposo: los modos pesados
+tardan mas en llegar a su excursion completa que los livianos, y por eso los
+primeros 300 ms no son loopeables y src/js/loop.js tiene que buscar la meseta.
 
     uv run --with numpy python tools/buzzer.py
 
-Needs numpy, and ffmpeg on PATH for the Ogg and AAC encodes.
+Necesita numpy, y ffmpeg en el PATH para los encodes a Ogg y AAC.
 """
 
 import os
@@ -25,10 +25,10 @@ import numpy as np
 
 SR = 44100
 MAINS = 60.0
-PERIOD = int(round(SR / MAINS))     # 735 samples, exact
-STRIKE_FORCE = (1.00, 0.85)         # the two strikes per mains cycle
+PERIOD = int(round(SR / MAINS))     # 735 muestras, exacto
+STRIKE_FORCE = (1.00, 0.85)         # los dos golpes de cada ciclo de red
 
-# frequency Hz, decay ms, weight, force per strike
+# frecuencia Hz, caida ms, peso, fuerza por golpe
 MODES = [
     (125.0, 34.0, 0.70, (1.00, 1.00)),
     (358.0, 24.0, 0.69, (1.00, 0.96)),
@@ -38,21 +38,21 @@ MODES = [
     (3180.0, 5.0, 2.14, (1.00, 0.92)),
 ]
 CLICK_WEIGHT = 0.45
-CLICK_WIDTH_MS = 0.75   # the contact is soft, not a spike
+CLICK_WIDTH_MS = 0.75   # el contacto es blando, no un pico
 CLICK_HZ = 1200.0
-HEAVY_HZ = 300.0        # modes below this are the ones that take time to build
+HEAVY_HZ = 300.0        # por debajo de esto estan los modos que tardan en armarse
 TILT_HZ = 2400.0
 RING_PERIODS = 24
 WARMUP_PERIODS = 12
 DURATION = 0.65
 SPINUP_MS = 120.0
-SPINUP_FLOOR = 0.62     # how much of the heavy modes is already there at t=0
+SPINUP_FLOOR = 0.62     # cuanto de los modos pesados ya esta ahi en t=0
 ATTACK_MS = 8.0
 FADE_IN_MS = 2.0
 FADE_OUT_MS = 8.0
 
 STEADY_FROM = 0.35
-TARGET_DBA = -22.14     # sustained level, A-weighted; audio.js adds no gain
+TARGET_DBA = -22.14     # nivel sostenido, ponderado A; audio.js no agrega ganancia
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, 'assets', 'audio')
@@ -63,11 +63,12 @@ def strike_offsets(count):
 
 
 def modal_body(modes):
-    """One exactly-periodic period, folding each mode's ring back onto itself.
+    """Un periodo exactamente periodico, plegando la cola de cada modo.
 
-    A mode rings for longer than one period, so the steady state of a sustained
-    buzzer is the sum of every past strike still ringing. Folding the tail back
-    into a single period reproduces that steady state exactly.
+    Un modo resuena mas de un periodo, asi que el estado estacionario de un
+    zumbador sostenido es la suma de todos los golpes anteriores que siguen
+    sonando. Plegar la cola dentro de un solo periodo reproduce ese estado
+    estacionario exacto.
     """
     span = PERIOD * RING_PERIODS
     total = np.zeros(span)
@@ -80,11 +81,11 @@ def modal_body(modes):
 
 
 def click_body():
-    """The contact click, one soft pulse per strike.
+    """El click del contacto, un pulso blando por golpe.
 
-    It fills in the harmonics the narrow modes cannot reach on their own. A bare
-    impulse would do that too, but it also lands as a sample-wide spike: all the
-    crest factor, plus an ultrasonic tail the real thing does not have.
+    Rellena los armonicos a los que los modos, angostos, no llegan solos. Un
+    impulso pelado haria lo mismo, pero ademas cae como un pico de una muestra:
+    todo el factor de cresta, mas una cola ultrasonica que el original no tiene.
     """
     sigma = SR * CLICK_WIDTH_MS / 1000.0
     index = np.arange(PERIOD)
@@ -96,12 +97,11 @@ def click_body():
 
 
 def periodic_lowpass(period, cutoff):
-    """One-pole lowpass that leaves the period periodic.
+    """Pasabajos de un polo que deja el periodo periodico.
 
-    Filtering a single period on its own leaves the filter state discontinuous
-    at the wrap, which would put a step exactly at the loop point. Running the
-    filter over repeats of the period and keeping the last one lets the state
-    settle first.
+    Filtrar un periodo suelto deja el estado del filtro discontinuo en el
+    empalme, y eso pondria un escalon justo en el punto del bucle. Correr el
+    filtro sobre varias repeticiones y quedarse con la ultima lo deja asentado.
     """
     decay = np.exp(-2 * np.pi * cutoff / SR)
     x = np.tile(period, WARMUP_PERIODS)
@@ -122,12 +122,12 @@ def rms(x):
 
 
 def a_weighted_rms(x):
-    """Level as the ear reads it, per IEC 61672.
+    """Nivel como lo lee el oido, segun IEC 61672.
 
-    Plain RMS is the wrong thing to normalise by here: the ear is far more
-    sensitive around 3 kHz than at 120 Hz, so two takes at the same RMS can sit
-    very differently in the room. Weighting first keeps the perceived level put
-    while the modes are being retuned.
+    El RMS crudo es la medida equivocada aca: el oido es mucho mas sensible
+    cerca de los 3 kHz que en los 120 Hz, asi que dos versiones al mismo RMS
+    pueden quedar muy distintas de volumen. Ponderar primero deja el nivel
+    percibido quieto mientras se retocan los modos.
     """
     freq = np.fft.rfftfreq(len(x), 1 / SR)
     f2 = np.square(freq)
@@ -137,7 +137,7 @@ def a_weighted_rms(x):
                    * (f2 + 12194.0 ** 2))
     with np.errstate(divide='ignore', invalid='ignore'):
         curve = np.where(denominator > 0, numerator / denominator, 0.0)
-    curve *= 10 ** (2.0 / 20)       # 0 dB at 1 kHz
+    curve *= 10 ** (2.0 / 20)       # 0 dB en 1 kHz
     return rms(np.fft.irfft(np.fft.rfft(x) * curve, len(x)))
 
 
