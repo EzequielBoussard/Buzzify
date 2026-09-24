@@ -1,17 +1,12 @@
-// El sitio entero pesa 117 KB, asi que se guarda completo la primera vez y
-// despues funciona sin red. Un pulsador que deja de andar porque el wifi del
-// salon se cayo no sirve de nada.
-//
-// Se sirve desde la cache y se revalida de fondo: la pagina abre al instante
-// y una version nueva queda lista para la visita siguiente. La alternativa
-// era pedir cache fresca en cada deploy, y eso se olvida.
+// El sitio pesa 117 KB, asi que se guarda entero y despues anda sin red. Se
+// sirve desde la cache y se revalida de fondo; la otra opcion era invalidar
+// en cada deploy, y eso se olvida.
 
 const VERSION = 'v1';
 const CACHE = `buzzify-${VERSION}`;
 
-// Todo lo que hace falta para que el buzzer suene sin red. Los iconos grandes
-// y la imagen para redes no entran: los pide el sistema al instalar, estando
-// online, y offline no los mira nadie.
+// Los iconos grandes y la imagen para redes no entran: los pide el sistema al
+// instalar, estando online.
 const SHELL = [
     '/',
     '/index.html',
@@ -34,7 +29,7 @@ const SHELL = [
     '/assets/fonts/outfit-latin.woff2',
     '/assets/icons/favicon.svg',
     // Los dos formatos: audio.js cae al otro si el navegador no decodifica el
-    // primero, y offline ese plan B tambien tiene que estar guardado.
+    // primero, y sin red ese plan B tambien tiene que estar guardado.
     '/assets/audio/audio.ogg',
     '/assets/audio/audio.m4a',
 ];
@@ -47,9 +42,8 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Se van las caches de otras versiones y, dentro de la actual, lo que ya no
-// figura en SHELL. Asi sacar un archivo de la lista se arregla solo y VERSION
-// queda para cuando haga falta tirar todo de una.
+// Purga las caches viejas y, dentro de la actual, lo que ya no figura en
+// SHELL: sacar un archivo de la lista se arregla solo.
 const prune = async () => {
     const names = await caches.keys();
     await Promise.all(names.filter((name) => name !== CACHE).map((name) => caches.delete(name)));
@@ -70,9 +64,8 @@ const refresh = async (request) => {
     try {
         const response = await fetch(request);
 
-        // Solo se guarda lo que esta en SHELL. La cache queda acotada a esa
-        // lista y nada mas puede entrar: ni un error, ni /?utm_source=algo,
-        // que dejaria una copia de la portada por cada link compartido.
+        // Acotar a SHELL deja fuera /?utm_source=algo, que si no dejaria una
+        // copia de la portada por cada link compartido.
         if (response.ok && inShell(new URL(request.url))) {
             const cache = await caches.open(CACHE);
             await cache.put(request, response.clone());
@@ -86,15 +79,15 @@ const refresh = async (request) => {
 const serve = async (event) => {
     const { request } = event;
 
-    // Un link compartido llega con ?utm_source y mil cosas mas. La portada es
-    // la misma, asi que en una navegacion la query no cuenta para buscarla.
+    // /?utm_source=algo es la misma portada, asi que en una navegacion la
+    // query no cuenta para buscarla.
     const cached = await caches.match(request, {
         ignoreSearch: request.mode === 'navigate',
     });
 
     if (cached) {
-        // Sin await: la pagina no espera por la actualizacion, pero el worker
-        // no se puede apagar hasta que termine de escribirla.
+        // Sin await, pero dentro de waitUntil: la pagina no espera y el worker
+        // no se apaga a mitad de la escritura.
         event.waitUntil(refresh(request));
         return cached;
     }
@@ -102,12 +95,10 @@ const serve = async (event) => {
     const fresh = await refresh(request);
     if (fresh) return fresh;
 
-    // Sin red y sin copia. Una navegacion se merece una pagina; el resto que
-    // falle, que para eso audio.js y los demas ya manejan sus errores.
     if (request.mode === 'navigate') {
         const page = await caches.match('/404.html');
-        // La copia guardada es un 200. Devolverla tal cual diria que la ruta
-        // existe, que es justo lo contrario de lo que la pagina cuenta.
+        // La copia guardada es un 200; devolverla tal cual diria que la ruta
+        // existe.
         if (page) {
             return new Response(await page.blob(), {
                 status: 404,
@@ -124,14 +115,12 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Solo lecturas de este sitio por http(s). Un POST, una extension del
-    // navegador o un blob: no tienen nada que hacer aca.
     if (request.method !== 'GET') return;
     if (url.origin !== self.location.origin) return;
     if (!url.protocol.startsWith('http')) return;
 
-    // Safari pide medios por tramos. Una respuesta guardada es entera y
-    // responder 200 a un Range rompe la reproduccion, asi que va derecho.
+    // Safari pide medios por tramos, y responder un 200 entero a un Range
+    // rompe la reproduccion.
     if (request.headers.has('range')) return;
 
     event.respondWith(serve(event));

@@ -1,6 +1,5 @@
-// El registro espera al load: guardar el sitio entero no puede competir con
-// el primer pintado. Falla en silencio a proposito — sin service worker la
-// pagina anda igual, solo que pidiendo todo a la red.
+// Espera al load: guardar 117 KB no puede competir con el primer pintado. Si
+// falla no pasa nada, la pagina anda igual pidiendole todo a la red.
 
 export const initOffline = () => {
     if (!('serviceWorker' in navigator)) return;
