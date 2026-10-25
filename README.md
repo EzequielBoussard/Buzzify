@@ -33,7 +33,7 @@ Después, `http://localhost:8777`.
 
 ```
 index.html                 marcado y arranque de preferencias antes del primer pintado
-404.html                   pagina de ruta inexistente, sin scripts, en los dos idiomas a la vez
+404.html                   página de ruta inexistente, sin scripts, en los dos idiomas a la vez
 sw.js                      service worker: guarda el sitio y lo sirve sin red
 site.webmanifest           metadatos de PWA
 _headers                   cabeceras de caché y seguridad para Cloudflare Pages
@@ -82,9 +82,9 @@ El primero es que el archivo es un disparo único: abre y cierra con una rampa. 
 
 El segundo es que **no es un tono estacionario**: su banda grave crece alrededor de un 40 % durante los primeros 300 ms, mientras la banda aguda ya está entera desde el primer golpe. Cualquier bucle que incluya ese tramo reinicia el bajo más abajo de donde terminó, y eso se escucha como un bombo periódico.
 
-`loop.js` recorta el bucle del tramo donde la banda grave ya se estabilizó, busca el largo que mejor correlaciona con el arranque —sin asumir periodicidad— y funde la cola sobre la cabeza con un crossfade lineal de 20 ms. El corte cae en 320 ms y el buffer queda en 150 ms; el análisis tarda menos de 20 ms en el hilo principal, así que corre en la primera pulsación sin bloquear nada.
+`loop.js` recorta el bucle del tramo donde la banda grave ya se estabilizó, busca el largo que mejor correlaciona con el arranque -sin asumir periodicidad- y funde la cola sobre la cabeza con un crossfade lineal de 20 ms. El corte cae en 320 ms y el buffer queda en 150 ms; el análisis tarda menos de 20 ms en el hilo principal, así que corre en la primera pulsación sin bloquear nada.
 
-El algoritmo no sabe nada del modelo que generó el sonido y aun así el largo que elige cae siempre en 9 ciclos de red exactos, en ogg y en aac, a 44,1, 48, 88,2, 96 y 192 kHz. Lo que queda en la unión es el ruido de cuantización del codec, no un escalón del bucle: entre −38,6 y −67,8 dBFS según el formato, y nunca más de un tercio del percentil 99 de los saltos entre muestras contiguas del propio archivo. La costura es más suave que los flancos que el sonido ya tiene.
+El algoritmo no sabe nada del modelo que generó el sonido y aun así el largo que elige cae siempre en 9 ciclos de red exactos, en ogg y en aac, a 44,1, 48, 88,2, 96 y 192 kHz. Lo que queda en la unión es el ruido de cuantización del codec, no un escalón del bucle: entre -38,6 y -67,8 dBFS según el formato, y nunca más de un tercio del percentil 99 de los saltos entre muestras contiguas del propio archivo. La costura es más suave que los flancos que el sonido ya tiene.
 
 Los umbrales están en milisegundos y no en muestras, para que el resultado no dependa del sample rate al que el navegador abra el `AudioContext`.
 
@@ -116,7 +116,7 @@ En iOS hay dos obstáculos distintos. El primero es la política de autoplay: el
 
 Sin paso de compilación. En Cloudflare Pages: preset de framework **None**, comando de build vacío, directorio de salida la raíz del repositorio.
 
-Sin un `404.html` en la raiz, Cloudflare Pages responde cualquier ruta inexistente con un 200 y la portada. Esa pagina existe para que devuelva un 404 de verdad; no lleva scripts, así que no suma hashes a la CSP.
+Sin un `404.html` en la raíz, Cloudflare Pages responde cualquier ruta inexistente con un 200 y la portada. Esa página existe para que devuelva un 404 de verdad; no lleva scripts, así que no suma hashes a la CSP.
 
 `_headers` fija revalidación en el HTML, en `src/`, en `sw.js` y en el audio, y una semana en fuentes e iconos. Ningún archivo lleva hash en el nombre, así que ninguno puede marcarse `immutable`: el audio se regeneró dos veces y quien ya hubiera entrado se habría quedado con la primera copia. Fuentes e iconos aguantan una semana porque cambiarlos implica cambiar también el nombre.
 
