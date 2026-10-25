@@ -2,11 +2,11 @@
 
 Pulsador de trivias para el navegador. Mantené presionado el botón y suena el buzzer, de forma continua y sin cortes, hasta que lo soltás.
 
-### [buzzify.pages.dev](https://buzzify.pages.dev/)
+**[buzzify.pages.dev](https://buzzify.pages.dev/)**
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/dark.png">
-  <img src="assets/screenshots/light.png" alt="Buzzify en tema claro: la barra con idioma, tema y color, y el botón verde en el centro.">
+  <img src="assets/screenshots/light.png" alt="Buzzify en el navegador: la barra con idioma, tema y color, y el botón en el centro.">
 </picture>
 
 Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos. La única tipografía va autoalojada, así que el sitio no pide nada a terceros. El audio tampoco es una grabación: se genera con un modelo físico (ver [El sonido](#el-sonido)).
