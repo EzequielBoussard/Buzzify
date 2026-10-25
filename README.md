@@ -2,6 +2,13 @@
 
 Pulsador de trivias para el navegador. Mantené presionado el botón y suena el buzzer, de forma continua y sin cortes, hasta que lo soltás.
 
+### [buzzify.pages.dev](https://buzzify.pages.dev/)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/dark.png">
+  <img src="assets/screenshots/light.png" alt="Buzzify en tema claro: la barra con idioma, tema y color, y el botón verde en el centro.">
+</picture>
+
 Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos. La única tipografía va autoalojada, así que el sitio no pide nada a terceros. El audio tampoco es una grabación: se genera con un modelo físico (ver [El sonido](#el-sonido)).
 
 ## Qué hace
@@ -40,6 +47,7 @@ _headers                   cabeceras de caché y seguridad para Cloudflare Pages
 assets/audio/              audio.ogg y audio.m4a (respaldo para WebKit)
 assets/fonts/              Outfit variable, subconjunto latino, autoalojada, con su OFL
 assets/og-image.png        tarjeta para redes
+assets/screenshots/        capturas para este README, no las pide el sitio
 assets/icons/              favicons, apple-touch-icon e iconos del manifest
 src/css/style.css
 src/js/main.js             cablea los módulos con el DOM

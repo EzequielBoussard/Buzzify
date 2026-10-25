@@ -39,3 +39,6 @@
 
 /assets/icons/*
   Cache-Control: public, max-age=604800
+
+/assets/screenshots/*
+  Cache-Control: public, max-age=604800
