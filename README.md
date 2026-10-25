@@ -92,7 +92,7 @@ Se reproduce con `AudioBufferSourceNode` y `loop = true`, que repite el buffer c
 
 ## Sin conexión
 
-El sitio entero pesa 117 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entran los iconos grandes ni la imagen para redes, que solo hacen falta estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
+El sitio entero pesa 116 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entran los iconos grandes ni la imagen para redes, que solo hacen falta estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
 
 Se sirve desde la caché y se revalida de fondo. La página abre al instante y una versión nueva queda lista para la visita siguiente. La alternativa era invalidar la caché en cada despliegue, y eso se olvida.
 
