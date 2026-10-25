@@ -5,8 +5,9 @@
 const VERSION = 'v1';
 const CACHE = `buzzify-${VERSION}`;
 
-// Los iconos grandes y la imagen para redes no entran: los pide el sistema al
-// instalar, estando online.
+// De los iconos solo entra el favicon SVG. Los PNG y el .ico son su respaldo
+// para navegadores viejos, y el resto lo pide el sistema al instalar o al
+// compartir, siempre estando online.
 const SHELL = [
     '/',
     '/index.html',
