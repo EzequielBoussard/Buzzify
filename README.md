@@ -16,15 +16,15 @@ Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos. La ú
 - **Sonido continuo mientras se mantiene presionado.** El audio se repite en bucle sin costura audible (ver [El bucle](#el-bucle)).
 - **Tema claro y oscuro**, con una transición circular que se expande desde el propio botón de tema.
 - **Color del botón configurable**: ocho presets y un selector propio de tono, saturación y luminosidad.
-- **Español e inglés.** En la primera visita se elige según `navigator.language`; a partir de ahí manda lo que el visitante haya elegido.
+- **Español e inglés.** En la primera visita se elige según `navigator.language`, con inglés como reserva; a partir de ahí manda lo que el visitante haya elegido.
 - **Vibración configurable** al pulsar, solo en móviles y tablets: se exige puntero grueso y ausencia de puntero fino, así que un equipo con ratón nunca ve el interruptor. Se puede apagar desde la barra. iOS no implementa la Vibration API, así que ahí el interruptor tampoco aparece.
-- **La pantalla no se apaga** mientras la página está a la vista, vía Wake Lock. Un pulsador apoyado en la mesa que se apaga solo no sirve de nada.
+- **La pantalla no se apaga** mientras la página está a la vista, vía Wake Lock. Un pulsador apoyado en la mesa tiene que seguir encendido cuando llega la pregunta.
 - **Funciona con teclado**: `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada, y los presets de color se recorren con las flechas, con `Inicio` y `Fin` en los extremos.
 - **Funciona sin conexión** después de la primera visita, y se puede instalar como aplicación (ver [Sin conexión](#sin-conexión)).
 - Las preferencias se guardan en `localStorage` y se aplican antes del primer pintado, sin parpadeo.
-- **Capa de entrada** con la marca, el gesto y un conmutador de idioma, que se disipa con el primer toque. No es decorativa: las políticas de autoplay solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
+- **Capa de entrada** con la marca, el gesto y un conmutador de idioma, que se disipa con el primer toque. Está por las políticas de autoplay, que solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
 
-Por defecto arranca en tema claro y verde `#2ecc71`. El idioma sale de `navigator.language`, con inglés como reserva.
+Por defecto arranca en tema claro y verde `#2ecc71`.
 
 ## Uso local
 
@@ -70,7 +70,7 @@ El texto visible está duplicado en el HTML con atributos `data-t` y se conmuta 
 
 ## El sonido
 
-El audio no es una grabación: lo genera [`tools/buzzer.py`](tools/buzzer.py) a partir de un modelo de zumbador electromagnético. Una lengüeta metálica es atraída por una bobina dos veces por ciclo de red; cada tirón es un golpe, con un click de contacto y un puñado de modos mecánicos que resuenan. Los dos golpes de cada ciclo no son idénticos, y esa asimetría es la que hace que un zumbador suene a zumbador y no a tono: pone bandas laterales a 60 Hz alrededor del contenido brillante mientras los modos graves repiten a 120 Hz.
+Lo genera [`tools/buzzer.py`](tools/buzzer.py) a partir de un modelo de zumbador electromagnético. Una lengüeta metálica es atraída por una bobina dos veces por ciclo de red; cada tirón es un golpe, con un click de contacto y un puñado de modos mecánicos que resuenan. Los dos golpes de cada ciclo no son idénticos, y esa asimetría es la que hace que un zumbador suene a zumbador y no a tono: pone bandas laterales a 60 Hz alrededor del contenido brillante mientras los modos graves repiten a 120 Hz.
 
 Un período se construye plegando la cola de cada modo sobre sí misma, así que el tramo sostenido es exactamente periódico en 735 muestras a 44,1 kHz. La lengüeta igual arranca desde el reposo: los modos pesados tardan más en llegar a su excursión completa que los livianos, y por eso los primeros 300 ms no son loopeables.
 
@@ -126,7 +126,7 @@ Sin paso de compilación. En Cloudflare Pages: preset de framework **None**, com
 
 Sin un `404.html` en la raíz, Cloudflare Pages responde cualquier ruta inexistente con un 200 y la portada. Esa página existe para que devuelva un 404 de verdad; no lleva scripts, así que no suma hashes a la CSP.
 
-`_headers` fija revalidación en el HTML, en `src/`, en `sw.js` y en el audio, y una semana en fuentes e iconos. Ningún archivo lleva hash en el nombre, así que ninguno puede marcarse `immutable`: el audio se regeneró dos veces y quien ya hubiera entrado se habría quedado con la primera copia. Fuentes e iconos aguantan una semana porque cambiarlos implica cambiar también el nombre.
+`_headers` fija revalidación en el HTML, en `src/`, en `sw.js` y en el audio, y una semana en fuentes, iconos e imágenes. Ningún archivo lleva hash en el nombre, así que ninguno puede marcarse `immutable`: el audio se regeneró dos veces y quien ya hubiera entrado se habría quedado con la primera copia. Fuentes, iconos e imágenes aguantan una semana porque cambiarlos implica cambiar también el nombre.
 
 Al agregar o renombrar un archivo hay que ponerlo en la lista `SHELL` de [`sw.js`](sw.js), o no se guarda y la página queda rota sin conexión. Es el único paso manual. Cambiarle el contenido a uno que ya está en la lista no pide nada, y sacarlo de la lista tampoco: al activarse, el worker borra de la caché todo lo que ya no figura en `SHELL`. `VERSION` queda para tirar la caché entera de una.
 
