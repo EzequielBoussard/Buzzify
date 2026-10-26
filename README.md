@@ -106,10 +106,11 @@ Se sirve desde la caché y se revalida de fondo. La página abre al instante y u
 
 Como hay manifest y service worker con manejador de `fetch`, la página se puede instalar: en Android y escritorio el navegador ofrece hacerlo, y en iOS se agrega desde Compartir. Instalada abre sin barra de direcciones y sin conexión.
 
-Tres casos que el service worker atiende aparte:
+Cuatro casos que el service worker atiende aparte:
 
 - Un enlace compartido llega con `?utm_source` y demás. En una navegación la query no cuenta para buscar en caché, y las respuestas con query no se guardan: si no, cada variante dejaría su propia copia de la portada.
 - Una ruta inexistente sin red devuelve la 404 guardada, pero reetiquetada como 404. La copia en caché es un 200 y servirla tal cual diría que la ruta existe.
+- Cloudflare Pages responde `/index.html` y `/404.html` con un 308 hacia `/` y `/404`. Una respuesta que llegó siguiendo una redirección no se puede devolver a una navegación, así que se guarda una copia sin esa marca. Sin eso, entrar por `/index.html` con el worker instalado daba error de red.
 - Safari pide medios por tramos. Una respuesta guardada es entera, y contestar 200 a un `Range` rompe la reproducción, así que esas peticiones van directo a la red.
 
 ## Compatibilidad

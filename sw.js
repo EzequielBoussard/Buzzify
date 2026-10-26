@@ -37,10 +37,31 @@ const SHELL = [
 
 const inShell = (url) => !url.search && SHELL.includes(url.pathname);
 
+// Cloudflare responde /index.html y /404.html con un 308 hacia / y /404. Una
+// respuesta que llego siguiendo una redireccion no se puede devolver a una
+// navegacion: entrar por /index.html daba error de red. Se guarda una copia
+// sin la marca de redireccion.
+const clean = async (response) => (response.redirected
+    ? new Response(await response.blob(), {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+    })
+    : response);
+
+const store = async (cache, request, response) => {
+    await cache.put(request, await clean(response));
+};
+
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE).then((cache) => cache.addAll(SHELL)),
-    );
+    event.waitUntil((async () => {
+        const cache = await caches.open(CACHE);
+        await Promise.all(SHELL.map(async (path) => {
+            const response = await fetch(path);
+            if (!response.ok) throw new Error(`${path}: ${response.status}`);
+            await store(cache, path, response);
+        }));
+    })());
 });
 
 // Purga las caches viejas y, dentro de la actual, lo que ya no figura en
@@ -69,7 +90,7 @@ const refresh = async (request) => {
         // copia de la portada por cada link compartido.
         if (response.ok && inShell(new URL(request.url))) {
             const cache = await caches.open(CACHE);
-            await cache.put(request, response.clone());
+            await store(cache, request, response.clone());
         }
         return response;
     } catch {
