@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Buzzify",
   "short_name": "Buzzify",
-  "description": "Hold the button and it buzzes, seamlessly, until you let go.",
+  "description": "Hold the button and it buzzes with no gaps until you let go.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./",
