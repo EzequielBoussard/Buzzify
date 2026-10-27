@@ -42,9 +42,13 @@ Después, `http://localhost:8777`.
 node --test
 ```
 
-Necesita Node 22 y nada más. [`tests/loop.test.mjs`](tests/loop.test.mjs) arma el mismo zumbido que `tools/buzzer.py`, en JavaScript y a 44,1, 48, 88,2, 96 y 192 kHz, y comprueba lo que describe [El bucle](#el-bucle): los 9 ciclos exactos, que el bucle quede donde el sonido ya se asentó, el empalme del crossfade, el vaivén del grave, que todos los canales se corten en el mismo lugar y que un audio sin tramo útil vuelva sin tocar.
+Necesita Node 22 y nada más.
 
-[`tests/shell.test.mjs`](tests/shell.test.mjs) cuida lo de [Sin conexión](#sin-conexión): que todo `src/` esté en `SHELL` y que el peso del shell escrito en este README, en `sw.js` y en `offline.js` sea el real. Los dos corren en cada push con GitHub Actions.
+- [`tests/loop.test.mjs`](tests/loop.test.mjs) arma el mismo zumbido que `tools/buzzer.py`, en JavaScript y a 44,1, 48, 88,2, 96 y 192 kHz, y comprueba lo que describe [El bucle](#el-bucle): los 9 ciclos exactos, que el bucle quede donde el sonido ya se asentó, el empalme del crossfade, el vaivén del grave, que todos los canales se corten en el mismo lugar y que un audio sin tramo útil vuelva sin tocar.
+- [`tests/sw.test.mjs`](tests/sw.test.mjs) corre `sw.js` con una red y una caché de mentira: la red primero, la copia sin red o con la red colgada, los links con query, la 404 sin red, las copias de `/index.html` sin la marca de redirección, los pedidos por tramos y la limpieza al activarse.
+- [`tests/shell.test.mjs`](tests/shell.test.mjs) cuida que todo `src/` esté en `SHELL` y que el peso del shell escrito en este README, en `sw.js` y en `offline.js` sea el real.
+
+Corren en cada push con GitHub Actions.
 
 ## Estructura
 
@@ -74,7 +78,7 @@ src/js/theme.js            claro/oscuro y la transición circular
 src/js/color.js            presets y selector HSL
 src/js/i18n.js             textos de accesibilidad y cambio de idioma
 tools/buzzer.py            genera el audio; no interviene en el sitio
-tests/                     tests del bucle y del shell, con el zumbido armado en JavaScript
+tests/                     tests del bucle, del service worker y del shell
 .github/workflows/         corre los tests en cada push
 ```
 
@@ -118,7 +122,7 @@ Se reproduce con `AudioBufferSourceNode` y `loop = true`, que repite el buffer c
 
 El sitio entero pesa 117 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entra el resto de los iconos ni la imagen para redes: el favicon SVG alcanza, y lo demás lo pide el sistema al instalar o al compartir, siempre estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
 
-Se sirve desde la caché y se revalida de fondo. La página abre al instante y una versión nueva queda lista para la visita siguiente. La alternativa era invalidar la caché en cada despliegue, y eso se olvida.
+Con red, cada pedido va primero a la red y la copia guardada se pone al día de fondo; la copia sale sin red, o si la red no contesta en 3 segundos. Al principio era al revés, la copia primero y la red de fondo: abría al instante, pero después de cada despliegue la primera visita mostraba la versión anterior. El worker nuevo toma el control apenas se instala, sin esperar a que se cierren las pestañas.
 
 Como hay manifest y service worker con manejador de `fetch`, la página se puede instalar: en Android y escritorio el navegador ofrece hacerlo, y en iOS se agrega desde Compartir. Instalada abre sin barra de direcciones y sin conexión.
 
@@ -145,7 +149,7 @@ Sin un `404.html` en la raíz, Cloudflare Pages responde cualquier ruta inexiste
 
 `_headers` fija revalidación en el HTML, en `src/`, en `sw.js` y en el audio, y una semana en fuentes, iconos e imágenes. Ningún archivo lleva hash en el nombre, así que ninguno puede marcarse `immutable`: el audio se regeneró dos veces y quien ya hubiera entrado se habría quedado con la primera copia. Fuentes, iconos e imágenes aguantan una semana porque cambiarlos implica cambiar también el nombre.
 
-Al agregar o renombrar un archivo hay que ponerlo en la lista `SHELL` de [`sw.js`](sw.js), o no se guarda y la página queda rota sin conexión. Es el único paso manual. Cambiarle el contenido a uno que ya está en la lista no pide nada, y sacarlo de la lista tampoco: al activarse, el worker borra de la caché todo lo que ya no figura en `SHELL`. `VERSION` queda para tirar la caché entera de una.
+Al agregar o renombrar un archivo hay que ponerlo en la lista `SHELL` de [`sw.js`](sw.js), o no se guarda y la página queda rota sin conexión. Es el único paso manual, y si falta un archivo de `src/` los tests avisan. Cambiarle el contenido a uno que ya está en la lista no pide nada, y sacarlo de la lista tampoco: al activarse, el worker borra de la caché todo lo que ya no figura en `SHELL`. `VERSION` queda para tirar la caché entera de una.
 
 El mismo archivo declara una CSP con `default-src 'none'` y permisos explícitos por tipo de recurso. El service worker necesita `worker-src 'self'`; sin declararlo heredaría de `script-src`, pero conviene que esté dicho. El script de arranque y el `<style>` del `<noscript>` van inline, así que se autorizan por hash. Si se edita cualquiera de los dos hay que recalcular el suyo; el parser normaliza CRLF a LF antes de hashear, de ahí el reemplazo:
 

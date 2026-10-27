@@ -1,9 +1,12 @@
-// El sitio pesa 117 KB, asi que se guarda entero y despues anda sin red. Se
-// sirve desde la cache y se revalida de fondo; la otra opcion era invalidar
-// en cada deploy, y eso se olvida.
+// El sitio pesa 117 KB, asi que se guarda entero y despues anda sin red. Con
+// red, cada pedido va primero a la red y la copia se pone al dia; la copia
+// sale sin red o si la red no contesta a tiempo. Servir la copia primero abria
+// al instante, pero mostraba la version anterior en la primera visita despues
+// de cada deploy.
 
 const VERSION = 'v1';
 const CACHE = `buzzify-${VERSION}`;
+const NETWORK_TIMEOUT = 3000;
 
 // De los iconos solo entra el favicon SVG. Los PNG y el .ico son su respaldo
 // para navegadores viejos, y el resto lo pide el sistema al instalar o al
@@ -61,6 +64,10 @@ self.addEventListener('install', (event) => {
             if (!response.ok) throw new Error(`${path}: ${response.status}`);
             await store(cache, path, response);
         }));
+
+        // Sin esperar a que se cierren las pestanas: una app instalada que no
+        // se cierra nunca seguiria con el worker viejo.
+        await self.skipWaiting();
     })());
 });
 
@@ -82,15 +89,17 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(prune().then(() => self.clients.claim()));
 });
 
-const refresh = async (request) => {
+const refresh = async (event) => {
+    const { request } = event;
     try {
         const response = await fetch(request);
 
         // Acotar a SHELL deja fuera /?utm_source=algo, que si no dejaria una
-        // copia de la portada por cada link compartido.
+        // copia de la portada por cada link compartido. La copia se escribe
+        // de fondo: la pagina no espera a que quede guardada.
         if (response.ok && inShell(new URL(request.url))) {
-            const cache = await caches.open(CACHE);
-            await store(cache, request, response.clone());
+            const copy = response.clone();
+            event.waitUntil(caches.open(CACHE).then((cache) => store(cache, request, copy)));
         }
         return response;
     } catch {
@@ -98,24 +107,30 @@ const refresh = async (request) => {
     }
 };
 
+const timeout = (ms) => new Promise((resolve) => {
+    setTimeout(() => resolve(null), ms);
+});
+
 const serve = async (event) => {
     const { request } = event;
+
+    // Si gana la copia, la red sigue de fondo para dejarla al dia, y
+    // waitUntil evita que el worker se apague antes.
+    const network = refresh(event);
+    event.waitUntil(network);
+
+    const fresh = await Promise.race([network, timeout(NETWORK_TIMEOUT)]);
+    if (fresh) return fresh;
 
     // /?utm_source=algo es la misma portada, asi que en una navegacion la
     // query no cuenta para buscarla.
     const cached = await caches.match(request, {
         ignoreSearch: request.mode === 'navigate',
     });
+    if (cached) return cached;
 
-    if (cached) {
-        // Sin await, pero dentro de waitUntil: la pagina no espera y el worker
-        // no se apaga a mitad de la escritura.
-        event.waitUntil(refresh(request));
-        return cached;
-    }
-
-    const fresh = await refresh(request);
-    if (fresh) return fresh;
+    const late = await network;
+    if (late) return late;
 
     if (request.mode === 'navigate') {
         const page = await caches.match('/404.html');
