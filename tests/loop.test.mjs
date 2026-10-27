@@ -1,7 +1,9 @@
 // Prueba buildSeamlessLoop con el zumbido de tools/buzzer.py a las cinco
-// frecuencias de muestreo que puede elegir el navegador. Los umbrales salen
-// de medir el audio real decodificado en Chrome: sirven para que un cambio
-// en el algoritmo o en el sonido no empeore el bucle sin que nadie se entere.
+// frecuencias de muestreo que puede elegir el navegador. Sin codec de por
+// medio el bucle sale mejor que con el audio real, y los umbrales dejan margen
+// sobre eso: estan para que un cambio en el algoritmo o en el sonido no
+// empeore el bucle sin que nadie se entere. Lo medido en Chrome esta en el
+// README.
 //
 //     node --test
 
@@ -67,30 +69,35 @@ for (const { sampleRate, loop } of cases) {
     });
 }
 
-test('el bucle no arranca en el ataque', () => {
+test('el bucle va donde el sonido ya se asento', () => {
+    // La meseta arranca a los 30 ms con tolerancia de 20 %, pero ahi el grave
+    // todavia sube. El bucle tiene que estar cerca del final del archivo.
     for (const { sampleRate, input, data } of cases) {
         const start = findStart(input, data, sampleRate);
         assert.ok(start >= 0, `${sampleRate} Hz: no se encontro el inicio`);
-        assert.ok(start / sampleRate >= 0.02, `${sampleRate} Hz: arranca a los ${(start / sampleRate * 1000).toFixed(0)} ms`);
+        assert.ok(start / sampleRate >= 0.4, `${sampleRate} Hz: arranca a los ${(start / sampleRate * 1000).toFixed(0)} ms`);
     }
 });
 
-test('el salto en la union queda por debajo de 0,4 del p99 de la senal', () => {
-    // Medido en Chrome con el audio real: entre 0,29 y 0,35.
+test('los dos tramos que funde el crossfade casi no difieren', () => {
+    // El crossfade arranca en la muestra que seguia, asi que el salto entre la
+    // ultima y la primera es siempre uno que el sonido ya tiene. Lo que cuenta
+    // es cuanto difiere lo que se repite de lo que hubiera seguido: sin codec
+    // da -53 dB; con el audio real, -23 en ogg y -41 en aac.
+    const rms = (values) => Math.sqrt(values.reduce((sum, value) => sum + value * value, 0) / values.length);
     for (const { sampleRate, input, data } of cases) {
         const start = findStart(input, data, sampleRate);
-        const jumps = [];
-        for (let i = start; i < start + data.length - 1; i += 1) jumps.push(Math.abs(input[i + 1] - input[i]));
-        jumps.sort((a, b) => a - b);
-        const p99 = jumps[Math.floor(jumps.length * 0.99)];
-        const seam = Math.abs(data[0] - data[data.length - 1]);
-        assert.ok(seam < p99 * 0.4, `${sampleRate} Hz: union ${(seam / p99).toFixed(3)} del p99`);
+        const width = Math.round(sampleRate * 0.02);
+        const head = input.subarray(start, start + width);
+        const next = input.subarray(start + data.length, start + data.length + width);
+        const mismatch = 20 * Math.log10(rms(head.map((value, i) => value - next[i])) / rms(head));
+        assert.ok(mismatch < -40, `${sampleRate} Hz: difieren en ${mismatch.toFixed(1)} dB`);
     }
 });
 
-test('el grave varia menos de 8 % a lo largo del bucle', () => {
-    // Medido en Chrome con el audio real: entre 5,1 y 6,4 %. Un bucle metido
-    // en la subida del grave pasa largo de eso y se oye como un bombo.
+test('el grave varia menos de 1 % a lo largo del bucle', () => {
+    // Un bucle metido en la subida del grave repite esa subida en cada vuelta
+    // y se oye como un bombo: al principio de la meseta era un 7 %.
     for (const { sampleRate, data } of cases) {
         const period = Math.round(sampleRate / MAINS);
         const repeated = new Float32Array(data.length * 3);
@@ -104,7 +111,7 @@ test('el grave varia menos de 8 % a lo largo del bucle', () => {
             levels.push(Math.sqrt(sum / period));
         }
         const swing = (Math.max(...levels) - Math.min(...levels)) / Math.max(...levels);
-        assert.ok(swing < 0.08, `${sampleRate} Hz: el grave varia ${(swing * 100).toFixed(1)} %`);
+        assert.ok(swing < 0.01, `${sampleRate} Hz: el grave varia ${(swing * 100).toFixed(2)} %`);
     }
 });
 

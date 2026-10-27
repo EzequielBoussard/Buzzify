@@ -1,6 +1,7 @@
-// El archivo es un disparo unico y su banda grave sigue creciendo durante los
-// primeros 300 ms. Loopear ese tramo se oye como un bombo, asi que primero se
-// busca donde el grave se estabiliza y recien ahi el largo del bucle.
+// El archivo es un disparo unico y su banda grave sigue creciendo durante el
+// arranque. Loopear ese tramo se oye como un bombo, asi que primero se busca
+// donde el grave se estabiliza, despues el largo del bucle, y el bucle va al
+// final de ese tramo, donde el sonido ya se asento.
 //
 // Todo va en milisegundos y en Hz, nunca en muestras: el navegador abre el
 // AudioContext al sample rate que quiere y el resultado no puede depender de
@@ -147,11 +148,14 @@ export const buildSeamlessLoop = (context, source) => {
     if (start < 0) return source;
 
     const length = findLoopLength(analysis, low, start, end, minLength, window, step);
-    const fade = Math.min(
-        Math.round((sampleRate * CROSSFADE_MS) / 1000),
-        Math.floor(length / 8),
-        end - start - length,
-    );
+    const fade = Math.min(Math.round((sampleRate * CROSSFADE_MS) / 1000), Math.floor(length / 8));
+
+    // La meseta se detecta con tolerancia y el grave sigue subiendo adentro:
+    // puesto al principio, el bucle repetia una subida del 6 %. El largo vale
+    // en cualquier lugar de la meseta, asi que va al final. Como el largo deja
+    // lugar para la ventana de comparacion, que es mas larga que el
+    // crossfade, esto nunca cae antes del inicio de la meseta.
+    const from = end - length - fade;
 
     const loop = context.createBuffer(source.numberOfChannels, length, sampleRate);
 
@@ -159,11 +163,11 @@ export const buildSeamlessLoop = (context, source) => {
         const input = source.getChannelData(channel);
         const output = loop.getChannelData(channel);
 
-        for (let i = 0; i < length; i += 1) output[i] = input[start + i];
+        for (let i = 0; i < length; i += 1) output[i] = input[from + i];
 
         for (let i = 0; i < fade; i += 1) {
             const ratio = i / fade;
-            output[i] = output[i] * ratio + input[start + length + i] * (1 - ratio);
+            output[i] = output[i] * ratio + input[from + length + i] * (1 - ratio);
         }
     }
 
