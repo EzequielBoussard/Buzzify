@@ -46,7 +46,7 @@ site.webmanifest           metadatos de PWA
 _headers                   cabeceras de caché y seguridad para Cloudflare Pages
 assets/audio/              audio.ogg y audio.m4a (respaldo para WebKit)
 assets/fonts/              Outfit variable, subconjunto latino, autoalojada, con su OFL
-assets/og-image.png        tarjeta para redes
+assets/og-card.jpg         tarjeta para redes, 1200x630
 assets/screenshots/        capturas para este README, no las pide el sitio
 assets/icons/              favicons, apple-touch-icon e iconos del manifest
 src/css/style.css
