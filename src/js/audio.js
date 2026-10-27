@@ -124,8 +124,6 @@ function tryPlay() {
     const source = ctx.createBufferSource();
     source.buffer = ready;
     source.loop = true;
-    source.loopStart = 0;
-    source.loopEnd = ready.duration;
     source.connect(gain);
     source.addEventListener('ended', () => gain.disconnect(), { once: true });
     source.start();
