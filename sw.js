@@ -1,4 +1,4 @@
-// El sitio pesa 116 KB, asi que se guarda entero y despues anda sin red. Se
+// El sitio pesa 117 KB, asi que se guarda entero y despues anda sin red. Se
 // sirve desde la cache y se revalida de fondo; la otra opcion era invalidar
 // en cada deploy, y eso se olvida.
 

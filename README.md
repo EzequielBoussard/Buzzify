@@ -36,6 +36,16 @@ python -m http.server 8777
 
 Después, `http://localhost:8777`.
 
+## Tests
+
+```bash
+node --test
+```
+
+Necesita Node 22 y nada más. [`tests/loop.test.mjs`](tests/loop.test.mjs) arma el mismo zumbido que `tools/buzzer.py`, en JavaScript y a 44,1, 48, 88,2, 96 y 192 kHz, y comprueba lo que describe [El bucle](#el-bucle): los 9 ciclos exactos, el salto en la unión, el vaivén del grave, que todos los canales se corten en el mismo lugar y que un audio sin tramo útil vuelva sin tocar. Los umbrales salen de medir el audio real en Chrome.
+
+[`tests/shell.test.mjs`](tests/shell.test.mjs) cuida lo de [Sin conexión](#sin-conexión): que todo `src/` esté en `SHELL` y que el peso del shell escrito en este README, en `sw.js` y en `offline.js` sea el real. Los dos corren en cada push con GitHub Actions.
+
 ## Estructura
 
 ```
@@ -64,6 +74,8 @@ src/js/theme.js            claro/oscuro y la transición circular
 src/js/color.js            presets y selector HSL
 src/js/i18n.js             textos de accesibilidad y cambio de idioma
 tools/buzzer.py            genera el audio; no interviene en el sitio
+tests/                     tests del bucle y del shell, con el zumbido armado en JavaScript
+.github/workflows/         corre los tests en cada push
 ```
 
 El texto visible está duplicado en el HTML con atributos `data-t` y se conmuta por CSS según `html[lang]`. JavaScript solo se ocupa de los `aria-label`, que no se pueden expresar en el marcado por duplicado.
@@ -100,7 +112,7 @@ Se reproduce con `AudioBufferSourceNode` y `loop = true`, que repite el buffer c
 
 ## Sin conexión
 
-El sitio entero pesa 116 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entra el resto de los iconos ni la imagen para redes: el favicon SVG alcanza, y lo demás lo pide el sistema al instalar o al compartir, siempre estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
+El sitio entero pesa 117 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entra el resto de los iconos ni la imagen para redes: el favicon SVG alcanza, y lo demás lo pide el sistema al instalar o al compartir, siempre estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
 
 Se sirve desde la caché y se revalida de fondo. La página abre al instante y una versión nueva queda lista para la visita siguiente. La alternativa era invalidar la caché en cada despliegue, y eso se olvida.
 
