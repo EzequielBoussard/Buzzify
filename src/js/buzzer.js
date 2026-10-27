@@ -22,6 +22,8 @@ export const initBuzzer = (button) => {
     };
 
     button.addEventListener('pointerdown', (event) => {
+        // Clic derecho o rueda: el menu contextual puede comerse el pointerup.
+        if (event.button !== 0) return;
         press();
         try {
             button.setPointerCapture(event.pointerId);
