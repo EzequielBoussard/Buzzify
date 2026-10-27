@@ -54,7 +54,7 @@ index.html                 marcado y arranque de preferencias antes del primer p
 sw.js                      service worker: guarda el sitio y lo sirve sin red
 site.webmanifest           metadatos de PWA
 _headers                   cabeceras de caché y seguridad para Cloudflare Pages
-assets/audio/              audio.ogg y audio.m4a (respaldo para WebKit)
+assets/audio/              audio.m4a y audio.ogg (respaldo donde no hay AAC)
 assets/fonts/              Outfit variable, subconjunto latino, autoalojada, con su OFL
 assets/og-card.jpg         tarjeta para redes, 1200x630
 assets/screenshots/        capturas para este README, no las pide el sitio
@@ -129,7 +129,7 @@ Cuatro casos que el service worker atiende aparte:
 
 ## Compatibilidad
 
-El audio se sirve en Ogg Vorbis, con una copia en AAC que se elige automáticamente cuando el navegador no puede decodificar Vorbis, que es el caso de WebKit. Si la decodificación del formato elegido falla de todas formas, se reintenta con el otro.
+El audio se sirve en AAC, con una copia en Ogg Vorbis para los navegadores que no tienen AAC, como Chromium o Firefox en algunos Linux. Con este sonido AAC mete unos 20 dB menos de ruido y pesa 11 KB contra 14. Si la decodificación del formato elegido falla de todas formas, se reintenta con el otro.
 
 La transición de tema usa la View Transitions API y se degrada a un fundido CSS donde no está disponible. `color-mix()` tiene un color de reserva declarado antes.
 

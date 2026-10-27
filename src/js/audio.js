@@ -8,8 +8,12 @@ const ARMING_EVENTS = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown
 const SILENT_RATE = 8000;
 const SILENT_FRAMES = 2000;
 
-const canPlayOgg = Boolean(document.createElement('audio').canPlayType('audio/ogg; codecs="vorbis"'));
-const [PRIMARY_URL, FALLBACK_URL] = canPlayOgg ? [OGG_URL, AAC_URL] : [AAC_URL, OGG_URL];
+// AAC primero: con este sonido mete unos 20 dB menos de ruido que Vorbis
+// entre un ciclo y el siguiente, que en el original son identicos, y pesa
+// menos. Ogg queda para donde no hay AAC, como Chromium o Firefox en algunos
+// Linux.
+const canPlayAac = Boolean(document.createElement('audio').canPlayType('audio/mp4; codecs="mp4a.40.2"'));
+const [PRIMARY_URL, FALLBACK_URL] = canPlayAac ? [AAC_URL, OGG_URL] : [OGG_URL, AAC_URL];
 
 const fetchAudio = (url) => fetch(url).then((response) => {
     if (!response.ok) throw new Error(`Audio request failed: ${response.status}`);
