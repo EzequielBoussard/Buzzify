@@ -4,31 +4,10 @@
 Thumbs.db
 desktop.ini
 
-# editores y asistentes locales
+# editores
 .vscode/
 .idea/
 .zed/
-.claude/
-.cursor/
-.cursorrules
-.cursorignore
-.windsurf/
-.windsurfrules
-.continue/
-.codeium/
-.aider*
-.cline*
-.roo/
-.roomodes
-.junie/
-.specstory/
-.serena/
-.mcp.json
-AGENTS.md
-CLAUDE.md
-CLAUDE.local.md
-GEMINI.md
-.github/copilot-instructions.md
 
 # python de tools/
 __pycache__/

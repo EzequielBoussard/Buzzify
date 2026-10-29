@@ -2,7 +2,7 @@
 
 Pulsador de trivias para el navegador. Mantené presionado el botón y suena el buzzer, de forma continua y sin cortes, hasta que lo soltás.
 
-**[buzzify.pages.dev](https://buzzify.pages.dev/)**
+Probalo en [buzzify.pages.dev](https://buzzify.pages.dev/).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/dark.png">
@@ -13,16 +13,16 @@ Sin dependencias, sin build, sin backend: HTML, CSS y módulos ES nativos. La ú
 
 ## Qué hace
 
-- **Sonido continuo mientras se mantiene presionado.** El audio se repite en bucle sin costura audible (ver [El bucle](#el-bucle)).
-- **Tema claro y oscuro**, con una transición circular que se expande desde el propio botón de tema.
-- **Color del botón configurable**: ocho presets y un selector propio de tono, saturación y luminosidad.
-- **Español e inglés.** En la primera visita se elige según `navigator.language`, con inglés como reserva; a partir de ahí manda lo que el visitante haya elegido.
-- **Vibración configurable** al pulsar, solo en móviles y tablets: se exige puntero grueso y ausencia de puntero fino, así que un equipo con ratón nunca ve el interruptor. Se puede apagar desde la barra. iOS no implementa la Vibration API, así que ahí el interruptor tampoco aparece.
-- **La pantalla no se apaga** mientras la página está a la vista, vía Wake Lock. Un pulsador apoyado en la mesa tiene que seguir encendido cuando llega la pregunta.
-- **Funciona con teclado**: `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada, y los presets de color se recorren con las flechas, con `Inicio` y `Fin` en los extremos.
-- **Funciona sin conexión** después de la primera visita, y se puede instalar como aplicación (ver [Sin conexión](#sin-conexión)).
+- El sonido sigue sin cortes mientras se mantiene presionado, en un bucle sin costura audible (ver [El bucle](#el-bucle)).
+- Tema claro y oscuro, con una transición circular que se expande desde el propio botón de tema.
+- El color del botón se puede cambiar, con ocho presets y un selector propio de tono, saturación y luminosidad.
+- Español e inglés. En la primera visita se elige según `navigator.language`, con inglés como reserva, y a partir de ahí manda lo que el visitante haya elegido.
+- Vibración al pulsar, solo en móviles y tablets, que se puede apagar desde la barra. Se exige puntero grueso y ausencia de puntero fino, así que un equipo con ratón nunca ve el interruptor. iOS no implementa la Vibration API, así que ahí tampoco aparece.
+- La pantalla no se apaga mientras la página está a la vista, vía Wake Lock. Un pulsador apoyado en la mesa tiene que seguir encendido cuando llega la pregunta.
+- Funciona con teclado. `Espacio` o `Enter` mantienen el buzzer sonando mientras la tecla esté pulsada, y los presets de color se recorren con las flechas, con `Inicio` y `Fin` en los extremos.
+- Funciona sin conexión después de la primera visita, y se puede instalar como aplicación (ver [Sin conexión](#sin-conexión)).
 - Las preferencias se guardan en `localStorage` y se aplican antes del primer pintado, sin parpadeo.
-- **Capa de entrada** con la marca, el gesto y un conmutador de idioma, que se disipa con el primer toque. Está por las políticas de autoplay, que solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
+- Una capa de entrada con la marca, el gesto y un conmutador de idioma, que se disipa con el primer toque. Está por las políticas de autoplay, que solo habilitan el audio tras una activación del usuario, y en táctil esa activación llega al cerrarse el gesto, no al apoyar el dedo. Sin ese primer toque en cualquier parte, la primera pulsación sostenida del buzzer se quedaría muda.
 
 Por defecto arranca en tema claro y verde `#2ecc71`.
 
@@ -104,15 +104,15 @@ Reproducir el archivo con `loop = true` produce un golpe audible en cada vuelta,
 
 El primero es que el archivo es un disparo único: abre y cierra con una rampa. Repetirla reproduce ese hueco una y otra vez.
 
-El segundo es que **no es un tono estacionario**: su banda grave crece alrededor de un 25 % en el arranque, la mitad en los primeros 50 ms, mientras la banda aguda ya está entera desde el primer golpe. Cualquier bucle que incluya ese tramo reinicia el bajo más abajo de donde terminó, y eso se escucha como un bombo periódico.
+El segundo es que no es un tono estacionario: su banda grave crece alrededor de un 25 % en el arranque, la mitad en los primeros 50 ms, mientras la banda aguda ya está entera desde el primer golpe. Cualquier bucle que incluya ese tramo reinicia el bajo más abajo de donde terminó, y eso se escucha como un bombo periódico.
 
-`loop.js` busca el tramo donde la banda grave ya se acercó a su nivel final, elige el largo que mejor correlaciona con el arranque -sin asumir periodicidad-, pone el bucle al final de ese tramo y funde la cola sobre la cabeza con un crossfade lineal de 20 ms. El buffer queda en 150 ms y el análisis tarda entre 4 y 14 ms en el hilo principal, así que corre en la primera pulsación sin bloquear nada.
+`loop.js` busca el tramo donde la banda grave ya se acercó a su nivel final, elige, sin asumir periodicidad, el largo que mejor correlaciona con el arranque, pone el bucle al final de ese tramo y funde la cola sobre la cabeza con un crossfade lineal de 20 ms. El buffer queda en 150 ms y el análisis tarda entre 4 y 14 ms en el hilo principal, así que corre en la primera pulsación sin bloquear nada.
 
 El tramo se detecta con tolerancia y, con este audio, arranca a los 30 ms. El nivel del grave medido en bloques de 10 ms llega a apartarse un 19 % de su valor típico con el propio zumbido, porque cada bloque agarra una fracción distinta del ciclo de red, y con esa oscilación la tolerancia de 12 % no encuentra un tramo largo y entra la de 20 %. Ahí el grave todavía sube: un bucle puesto al principio del tramo iba del 90 al 96 % y repetía esa subida en cada vuelta, un vaivén de 5 a 6 %. Como el largo sirve en cualquier lugar del tramo, el bucle va al final, a los 461 ms en ogg y a los 471 en aac, donde el sonido ya se asentó: el vaivén queda en 0,3 % con aac y en 1,5 % con ogg.
 
 El algoritmo no sabe nada del modelo que generó el sonido y aun así el largo que elige cae siempre en 9 ciclos de red exactos, en ogg y en aac, a 44,1, 48, 88,2, 96 y 192 kHz. Ayuda que el piso de 150 ms sean justo 9 ciclos a 60 Hz: con un zumbido de 50 Hz, a 44,1 y 88,2 kHz se queda en 7,5 ciclos, porque los dos golpes de cada ciclo se parecen demasiado para que la correlación distinga el ciclo entero del medio.
 
-En la unión no hay salto: el crossfade arranca justo en la muestra que seguía al final del bucle. Lo que mide el empalme es cuánto difiere lo que se repite de lo que hubiera seguido. Con aac son -41 dB. Con ogg son -23, y no es el bucle: Vorbis le agrega ese ruido al sonido entero, que en el original repite idéntico ciclo a ciclo. Por eso se sirve aac primero (ver [Compatibilidad](#compatibilidad)). Las cifras salen de decodificar el audio en Chrome a cada sample rate.
+En la unión no hay salto, porque el crossfade arranca justo en la muestra que seguía al final del bucle. Lo que mide el empalme es cuánto difiere lo que se repite de lo que hubiera seguido. Con aac son -41 dB. Con ogg son -23, por el ruido que Vorbis le agrega al sonido entero, que en el original repite idéntico ciclo a ciclo. Por eso se sirve aac primero (ver [Compatibilidad](#compatibilidad)). Las cifras salen de decodificar el audio en Chrome a cada sample rate.
 
 Los umbrales están en milisegundos y no en muestras, para que el resultado no dependa del sample rate al que el navegador abra el `AudioContext`.
 
@@ -143,7 +143,7 @@ En iOS hay dos obstáculos distintos. El primero es la política de autoplay: el
 
 ## Despliegue
 
-Sin paso de compilación. En Cloudflare Pages: preset de framework **None**, comando de build vacío, directorio de salida la raíz del repositorio.
+Sin paso de compilación. En Cloudflare Pages: preset de framework `None`, comando de build vacío, directorio de salida la raíz del repositorio.
 
 Sin un `404.html` en la raíz, Cloudflare Pages responde cualquier ruta inexistente con un 200 y la portada. Esa página existe para que devuelva un 404 de verdad; no lleva scripts, así que no suma hashes a la CSP.
 
