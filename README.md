@@ -46,6 +46,7 @@ Necesita Node 22 y nada más.
 
 - [`tests/loop.test.mjs`](tests/loop.test.mjs) arma el mismo zumbido que `tools/buzzer.py`, en JavaScript y a 44,1, 48, 88,2, 96 y 192 kHz, y comprueba lo que describe [El bucle](#el-bucle): los 9 ciclos exactos, que el bucle quede donde el sonido ya se asentó, el empalme del crossfade, el vaivén del grave, que todos los canales se corten en el mismo lugar y que un audio sin tramo útil vuelva sin tocar.
 - [`tests/sw.test.mjs`](tests/sw.test.mjs) corre `sw.js` con una red y una caché de mentira: la red primero, la copia sin red o con la red colgada, los links con query, la 404 sin red, las copias de `/index.html` sin la marca de redirección, los pedidos por tramos y la limpieza al activarse.
+- [`tests/audio.test.mjs`](tests/audio.test.mjs) simula un toque en un iPhone, donde `resume()` solo desbloquea el audio dentro de `pointerup`, `touchend` o `click`, y comprueba que después el buzzer suene en bucle.
 - [`tests/shell.test.mjs`](tests/shell.test.mjs) cuida que todo `src/` esté en `SHELL` y que el peso del shell escrito en este README, en `sw.js` y en `offline.js` sea el real.
 
 Corren en cada push con GitHub Actions.
@@ -78,7 +79,7 @@ src/js/theme.js            claro/oscuro y la transición circular
 src/js/color.js            presets y selector HSL
 src/js/i18n.js             textos de accesibilidad y cambio de idioma
 tools/buzzer.py            genera el audio; no interviene en el sitio
-tests/                     tests del bucle, del service worker y del shell
+tests/                     tests del bucle, del desbloqueo de audio, del service worker y del shell
 .github/workflows/         corre los tests en cada push
 ```
 
@@ -120,7 +121,7 @@ Se reproduce con `AudioBufferSourceNode` y `loop = true`, que repite el buffer c
 
 ## Sin conexión
 
-El sitio entero pesa 117 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entra el resto de los iconos ni la imagen para redes: el favicon SVG alcanza, y lo demás lo pide el sistema al instalar o al compartir, siempre estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
+El sitio entero pesa 118 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entra el resto de los iconos ni la imagen para redes: el favicon SVG alcanza, y lo demás lo pide el sistema al instalar o al compartir, siempre estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
 
 Con red, cada pedido va primero a la red y la copia guardada se pone al día de fondo; la copia sale sin red, o si la red no contesta en 3 segundos. Al principio era al revés, la copia primero y la red de fondo: abría al instante, pero después de cada despliegue la primera visita mostraba la versión anterior. El worker nuevo toma el control apenas se instala, sin esperar a que se cierren las pestañas.
 
@@ -139,7 +140,7 @@ El audio se sirve en AAC, con una copia en Ogg Vorbis para los navegadores que n
 
 La transición de tema usa la View Transitions API y se degrada a un fundido CSS donde no está disponible. `color-mix()` tiene un color de reserva declarado antes.
 
-En iOS hay dos obstáculos distintos. El primero es la política de autoplay: el contexto de audio se desbloquea reproduciendo un buffer silencioso dentro del primer gesto del usuario. El segundo es el interruptor lateral de silencio, que silencia Web Audio porque WebKit lo enruta por la categoría `ambient` del sistema; subir el volumen no cambia nada. Desde iOS 16.4 se corrige declarando `navigator.audioSession.type = 'playback'`, y en versiones anteriores se consigue el mismo cambio de categoría reproduciendo una pista WAV silenciosa en bucle, generada en memoria, dentro de ese mismo primer gesto. La contrapartida es que esa categoría no mezcla: al entrar, pausa el audio que el visitante tuviera sonando.
+En iOS hay dos obstáculos distintos. El primero es la política de autoplay: el contexto de audio se desbloquea reproduciendo un buffer silencioso dentro de un gesto del usuario. En táctil el gesto recién cuenta al soltar el dedo, no al apoyarlo, así que el desbloqueo se reintenta con cada evento hasta que el contexto corre. Antes se daba por hecho en el primer `pointerdown`, y en iOS el buzzer quedaba mudo. El segundo es el interruptor lateral de silencio, que silencia Web Audio porque WebKit lo enruta por la categoría `ambient` del sistema; subir el volumen no cambia nada. Desde iOS 16.4 se corrige declarando `navigator.audioSession.type = 'playback'`, y en versiones anteriores se consigue el mismo cambio de categoría reproduciendo una pista WAV silenciosa en bucle, generada en memoria, dentro de ese mismo primer gesto. La contrapartida es que esa categoría no mezcla: al entrar, pausa el audio que el visitante tuviera sonando.
 
 ## Despliegue
 

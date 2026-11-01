@@ -1,4 +1,4 @@
-// El sitio pesa 117 KB, asi que se guarda entero y despues anda sin red. Con
+// El sitio pesa 118 KB, asi que se guarda entero y despues anda sin red. Con
 // red, cada pedido va primero a la red y la copia se pone al dia; la copia
 // sale sin red o si la red no contesta a tiempo. Servir la copia primero abria
 // al instante, pero mostraba la version anterior en la primera visita despues
