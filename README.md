@@ -45,7 +45,7 @@ node --test
 Necesita Node 22 y nada más.
 
 - [`tests/loop.test.mjs`](tests/loop.test.mjs) arma el mismo zumbido que `tools/buzzer.py`, en JavaScript y a 44,1, 48, 88,2, 96 y 192 kHz, y comprueba lo que describe [El bucle](#el-bucle): los 9 ciclos exactos, que el bucle quede donde el sonido ya se asentó, el empalme del crossfade, el vaivén del grave, que todos los canales se corten en el mismo lugar y que un audio sin tramo útil vuelva sin tocar.
-- [`tests/sw.test.mjs`](tests/sw.test.mjs) corre `sw.js` con una red y una caché de mentira: la red primero, la copia sin red o con la red colgada, los links con query, la 404 sin red, las copias de `/index.html` sin la marca de redirección, los pedidos por tramos y la limpieza al activarse.
+- [`tests/sw.test.mjs`](tests/sw.test.mjs) corre `sw.js` con una red y una caché de mentira: la red primero, la precarga de la navegación, la copia sin red o con la red colgada, los links con query, la 404 sin red, las copias de `/index.html` sin la marca de redirección, los pedidos por tramos y la limpieza al activarse.
 - [`tests/audio.test.mjs`](tests/audio.test.mjs) simula un toque en un iPhone, donde `resume()` solo desbloquea el audio dentro de `pointerup`, `touchend` o `click`, y comprueba que después el buzzer suene en bucle.
 - [`tests/shell.test.mjs`](tests/shell.test.mjs) cuida que todo `src/` esté en `SHELL` y que el peso del shell escrito en este README, en `sw.js` y en `offline.js` sea el real.
 
@@ -123,7 +123,7 @@ Se reproduce con `AudioBufferSourceNode` y `loop = true`, que repite el buffer c
 
 El sitio entero pesa 118 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entra el resto de los iconos ni la imagen para redes: el favicon SVG alcanza, y lo demás lo pide el sistema al instalar o al compartir, siempre estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
 
-Con red, cada pedido va primero a la red y la copia guardada se pone al día de fondo; la copia sale sin red, o si la red no contesta en 3 segundos. Al principio era al revés, la copia primero y la red de fondo: abría al instante, pero después de cada despliegue la primera visita mostraba la versión anterior. El worker nuevo toma el control apenas se instala, sin esperar a que se cierren las pestañas.
+Con red, cada pedido va primero a la red y la copia guardada se pone al día de fondo; la copia sale sin red, o si la red no contesta en 3 segundos. Al principio era al revés, la copia primero y la red de fondo: abría al instante, pero después de cada despliegue la primera visita mostraba la versión anterior. El worker nuevo toma el control apenas se instala, sin esperar a que se cierren las pestañas. Con navigation preload el navegador pide el HTML mientras el worker arranca, en vez de esperarlo: sin eso, el HTML tardaba 1,2 s contra 0,15 del pedido directo.
 
 Como hay manifest y service worker con manejador de `fetch`, la página se puede instalar: en Android y escritorio el navegador ofrece hacerlo, y en iOS se agrega desde Compartir. Instalada abre sin barra de direcciones y sin conexión.
 

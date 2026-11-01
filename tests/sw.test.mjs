@@ -102,6 +102,7 @@ const boot = async () => {
         addEventListener: (type, listener) => { listeners[type] = listener; },
         skipWaiting: async () => { self.skipped = true; },
         clients: { claim: async () => {} },
+        registration: { navigationPreload: { enable: async () => { self.preload = true; } } },
     };
     // Los tiempos del worker corren cien veces mas rapido.
     const fastTimeout = (callback, ms) => setTimeout(callback, ms / 100);
@@ -115,11 +116,12 @@ const boot = async () => {
 
     // Un FetchEvent, mas la regla del navegador que rompio /index.html: una
     // navegacion no acepta una respuesta marcada como redirigida.
-    const request = async (path, { mode = 'cors', headers = {} } = {}) => {
+    const request = async (path, { mode = 'cors', headers = {}, preloaded } = {}) => {
         let answer = null;
         const pending = [];
         listeners.fetch({
             request: { url: new URL(path, ORIGIN).href, method: 'GET', mode, headers: new Headers(headers) },
+            preloadResponse: Promise.resolve(preloaded),
             respondWith: (promise) => { answer = promise; },
             waitUntil: (promise) => pending.push(promise),
         });
@@ -215,7 +217,13 @@ test('al activarse borra caches viejas y lo que ya no esta en SHELL', async () =
     await current.put('/archivo-que-ya-no-existe.js', new Response(''));
 
     const listeners = {};
-    const self = { location: { origin: ORIGIN }, addEventListener: (type, fn) => { listeners[type] = fn; }, skipWaiting: async () => {}, clients: { claim: async () => {} } };
+    const self = {
+        location: { origin: ORIGIN },
+        addEventListener: (type, fn) => { listeners[type] = fn; },
+        skipWaiting: async () => {},
+        clients: { claim: async () => {} },
+        registration: {},
+    };
     new Function('self', 'caches', 'fetch', 'setTimeout', source)(self, caches, network.fetch, setTimeout);
     const pending = [];
     listeners.activate({ waitUntil: (promise) => pending.push(promise) });
@@ -223,4 +231,21 @@ test('al activarse borra caches viejas y lo que ya no esta en SHELL', async () =
 
     assert.deepEqual(await caches.keys(), ['buzzify-v1']);
     assert.equal((await current.keys()).length, shell.length);
+});
+
+test('la navegacion usa la respuesta precargada y la guarda', async () => {
+    const { self, network, caches, request } = await boot();
+    assert.ok(self.preload, 'no se activo navigation preload');
+
+    const before = network.requests;
+    const page = await request('/', {
+        mode: 'navigate',
+        preloaded: new Response('<footer>Ezequiel Boussard precargado 2025-2026</footer>'),
+    });
+    assert.match(await page.text(), /precargado/);
+    assert.equal(network.requests, before, 'pidio a la red ademas de usar la precarga');
+
+    network.online = false;
+    const copy = await (await caches.open('buzzify-v1')).match('/');
+    assert.match(await copy.text(), /precargado/);
 });

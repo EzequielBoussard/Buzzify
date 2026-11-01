@@ -85,14 +85,21 @@ const prune = async () => {
     );
 };
 
+// Con la red primero, cada navegacion esperaba a que arrancara el worker
+// antes de pedir el HTML: 1,2 s contra 0,15 s del pedido directo. Con
+// navigation preload el navegador lo pide mientras el worker arranca.
+const preload = async () => {
+    if (self.registration.navigationPreload) await self.registration.navigationPreload.enable();
+};
+
 self.addEventListener('activate', (event) => {
-    event.waitUntil(prune().then(() => self.clients.claim()));
+    event.waitUntil(Promise.all([prune(), preload()]).then(() => self.clients.claim()));
 });
 
 const refresh = async (event) => {
     const { request } = event;
     try {
-        const response = await fetch(request);
+        const response = (await event.preloadResponse) || await fetch(request);
 
         // Acotar a SHELL deja fuera /?utm_source=algo, que si no dejaria una
         // copia de la portada por cada link compartido. La copia se escribe
