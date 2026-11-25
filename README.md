@@ -123,7 +123,7 @@ Se reproduce con `AudioBufferSourceNode` y `loop = true`, que repite el buffer c
 
 El sitio entero pesa 118 KB, así que [`sw.js`](sw.js) lo guarda completo en la primera visita y después funciona sin red: marcado, estilos, los trece módulos, la tipografía y los dos formatos de audio. No entra el resto de los iconos ni la imagen para redes: el favicon SVG alcanza, y lo demás lo pide el sistema al instalar o al compartir, siempre estando en línea. Un pulsador que deja de andar porque se cayó el wifi del salón no sirve de nada.
 
-Con red, cada pedido va primero a la red y la copia guardada se pone al día de fondo; la copia sale sin red, o si la red no contesta en 3 segundos. Al principio era al revés, la copia primero y la red de fondo: abría al instante, pero después de cada despliegue la primera visita mostraba la versión anterior. El worker nuevo toma el control apenas se instala, sin esperar a que se cierren las pestañas. Con navigation preload el navegador pide el HTML mientras el worker arranca, en vez de esperarlo: sin eso, el HTML tardaba 1,2 s contra 0,15 del pedido directo.
+Con red, cada pedido va primero a la red y la copia guardada se pone al día de fondo; la copia sale sin red, o si la red no contesta en 3 segundos. Así una versión nueva se ve en la primera visita después de cada despliegue. El worker nuevo toma el control apenas se instala, sin esperar a que se cierren las pestañas. Con navigation preload el navegador pide el HTML mientras el worker arranca, en vez de esperarlo.
 
 Como hay manifest y service worker con manejador de `fetch`, la página se puede instalar: en Android y escritorio el navegador ofrece hacerlo, y en iOS se agrega desde Compartir. Instalada abre sin barra de direcciones y sin conexión.
 
@@ -131,7 +131,7 @@ Cuatro casos que el service worker atiende aparte:
 
 - Un enlace compartido llega con `?utm_source` y demás. En una navegación la query no cuenta para buscar en caché, y las respuestas con query no se guardan: si no, cada variante dejaría su propia copia de la portada.
 - Una ruta inexistente sin red devuelve la 404 guardada, pero reetiquetada como 404. La copia en caché es un 200 y servirla tal cual diría que la ruta existe.
-- Cloudflare Pages responde `/index.html` y `/404.html` con un 308 hacia `/` y `/404`. Una respuesta que llegó siguiendo una redirección no se puede devolver a una navegación, así que se guarda una copia sin esa marca. Sin eso, entrar por `/index.html` con el worker instalado daba error de red.
+- Cloudflare Pages responde `/index.html` y `/404.html` con un 308 hacia `/` y `/404`. Una respuesta que llegó siguiendo una redirección no se puede devolver a una navegación, así que se guarda una copia sin esa marca.
 - Safari pide medios por tramos. Una respuesta guardada es entera, y contestar 200 a un `Range` rompe la reproducción, así que esas peticiones van directo a la red.
 
 ## Compatibilidad
@@ -140,7 +140,7 @@ El audio se sirve en AAC, con una copia en Ogg Vorbis para los navegadores que n
 
 La transición de tema usa la View Transitions API y se degrada a un fundido CSS donde no está disponible. `color-mix()` tiene un color de reserva declarado antes.
 
-En iOS hay dos obstáculos distintos. El primero es la política de autoplay: el contexto de audio se desbloquea reproduciendo un buffer silencioso dentro de un gesto del usuario. En táctil el gesto recién cuenta al soltar el dedo, no al apoyarlo, así que el desbloqueo se reintenta con cada evento hasta que el contexto corre. Antes se daba por hecho en el primer `pointerdown`, y en iOS el buzzer quedaba mudo. El segundo es el interruptor lateral de silencio, que silencia Web Audio porque WebKit lo enruta por la categoría `ambient` del sistema; subir el volumen no cambia nada. Desde iOS 16.4 se corrige declarando `navigator.audioSession.type = 'playback'`, y en versiones anteriores se consigue el mismo cambio de categoría reproduciendo una pista WAV silenciosa en bucle, generada en memoria, dentro de ese mismo primer gesto. La contrapartida es que esa categoría no mezcla: al entrar, pausa el audio que el visitante tuviera sonando.
+En iOS hay dos obstáculos distintos. El primero es la política de autoplay: el contexto de audio se desbloquea reproduciendo un buffer silencioso dentro de un gesto del usuario. En táctil el gesto recién cuenta al soltar el dedo, no al apoyarlo, así que el desbloqueo se reintenta con cada evento hasta que el contexto corre. El segundo es el interruptor lateral de silencio, que silencia Web Audio porque WebKit lo enruta por la categoría `ambient` del sistema; subir el volumen no cambia nada. Desde iOS 16.4 se corrige declarando `navigator.audioSession.type = 'playback'`, y en versiones anteriores se consigue el mismo cambio de categoría reproduciendo una pista WAV silenciosa en bucle, generada en memoria, dentro de ese mismo primer gesto. La contrapartida es que esa categoría no mezcla: al entrar, pausa el audio que el visitante tuviera sonando.
 
 ## Despliegue
 

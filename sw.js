@@ -1,8 +1,5 @@
-// El sitio pesa 118 KB, asi que se guarda entero y despues anda sin red. Con
-// red, cada pedido va primero a la red y la copia se pone al dia; la copia
-// sale sin red o si la red no contesta a tiempo. Servir la copia primero abria
-// al instante, pero mostraba la version anterior en la primera visita despues
-// de cada deploy.
+// El sitio pesa 118 KB, asi que se guarda entero y despues anda sin red. Va
+// primero a la red para no mostrar una version vieja despues de un deploy.
 
 const VERSION = 'v1';
 const CACHE = `buzzify-${VERSION}`;
@@ -40,10 +37,8 @@ const SHELL = [
 
 const inShell = (url) => !url.search && SHELL.includes(url.pathname);
 
-// Cloudflare responde /index.html y /404.html con un 308 hacia / y /404. Una
-// respuesta que llego siguiendo una redireccion no se puede devolver a una
-// navegacion: entrar por /index.html daba error de red. Se guarda una copia
-// sin la marca de redireccion.
+// Cloudflare redirige /index.html y /404.html, y una navegacion no acepta una
+// respuesta marcada como redirigida.
 const clean = async (response) => (response.redirected
     ? new Response(await response.blob(), {
         status: response.status,
@@ -65,8 +60,7 @@ self.addEventListener('install', (event) => {
             await store(cache, path, response);
         }));
 
-        // Sin esperar a que se cierren las pestanas: una app instalada que no
-        // se cierra nunca seguiria con el worker viejo.
+        // Una app instalada no se cierra nunca: esperar la dejaria con el viejo.
         await self.skipWaiting();
     })());
 });
@@ -85,9 +79,7 @@ const prune = async () => {
     );
 };
 
-// Con la red primero, cada navegacion esperaba a que arrancara el worker
-// antes de pedir el HTML: 1,2 s contra 0,15 s del pedido directo. Con
-// navigation preload el navegador lo pide mientras el worker arranca.
+// El HTML sale mientras el worker arranca, en vez de esperarlo.
 const preload = async () => {
     if (self.registration.navigationPreload) await self.registration.navigationPreload.enable();
 };
@@ -102,8 +94,7 @@ const refresh = async (event) => {
         const response = (await event.preloadResponse) || await fetch(request);
 
         // Acotar a SHELL deja fuera /?utm_source=algo, que si no dejaria una
-        // copia de la portada por cada link compartido. La copia se escribe
-        // de fondo: la pagina no espera a que quede guardada.
+        // copia de la portada por cada link compartido.
         if (response.ok && inShell(new URL(request.url))) {
             const copy = response.clone();
             event.waitUntil(caches.open(CACHE).then((cache) => store(cache, request, copy)));
@@ -121,8 +112,7 @@ const timeout = (ms) => new Promise((resolve) => {
 const serve = async (event) => {
     const { request } = event;
 
-    // Si gana la copia, la red sigue de fondo para dejarla al dia, y
-    // waitUntil evita que el worker se apague antes.
+    // Si gana la copia, la red sigue de fondo para dejarla al dia.
     const network = refresh(event);
     event.waitUntil(network);
 

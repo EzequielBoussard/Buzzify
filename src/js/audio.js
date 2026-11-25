@@ -138,11 +138,8 @@ function tryPlay() {
     active = { source, gain };
 }
 
-// En tactil, pointerdown no cuenta como gesto para desbloquear el audio:
-// recien pointerup, touchend o click. Chrome se acuerda de un gesto anterior,
-// pero Safari pide que resume() se llame dentro de uno, asi que si el primer
-// pointerdown desarmaba todo, en iOS el contexto quedaba suspendido para
-// siempre. Se sigue intentando con cada evento hasta que el contexto corre.
+// En tactil pointerdown no cuenta como gesto, y Safari solo desbloquea dentro
+// de uno: se insiste con cada evento hasta que el contexto corre.
 const disarm = () => {
     ARMING_EVENTS.forEach((type) => window.removeEventListener(type, arm, true));
 };

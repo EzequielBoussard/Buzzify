@@ -1,7 +1,5 @@
 // Un toque en un iPhone, con la regla de Safari: resume() solo desbloquea el
 // audio si se llama dentro de un gesto, y en tactil pointerdown no lo es.
-// Con eso el buzzer estuvo mudo en iOS sin que ningun navegador de
-// escritorio lo mostrara.
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';

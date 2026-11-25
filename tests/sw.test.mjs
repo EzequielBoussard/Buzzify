@@ -1,6 +1,5 @@
-// Corre sw.js con una red y una cache de mentira. El worker ya tuvo dos
-// problemas que solo aparecian en produccion: las copias redirigidas de
-// /index.html y la version vieja en la primera visita despues de un deploy.
+// Corre sw.js con una red y una cache de mentira, que imita los 308 de
+// Cloudflare.
 
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -114,8 +113,8 @@ const boot = async () => {
         await Promise.all(pending);
     };
 
-    // Un FetchEvent, mas la regla del navegador que rompio /index.html: una
-    // navegacion no acepta una respuesta marcada como redirigida.
+    // Un FetchEvent, mas la regla del navegador: una navegacion no acepta una
+    // respuesta marcada como redirigida.
     const request = async (path, { mode = 'cors', headers = {}, preloaded } = {}) => {
         let answer = null;
         const pending = [];
